@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>イントロどん！</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin: 0; padding: 20px; background: #f0f2f5; }
+    .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
+    input, button { font-size: 18px; padding: 12px; margin: 8px 0; width: 80%; border-radius: 8px; border: 1px solid #ccc; }
+    button { cursor: pointer; background: #007bff; color: white; border: none; font-weight: bold; }
+    button:disabled { background: #ccc; }
+    
+    /* 早押しボタンのデザイン */
+    .buzzer-btn {
+      width: 200px; height: 200px; border-radius: 50%; font-size: 28px; background: #ff4757;
+      color: white; border: 8px solid #ff6b81; box-shadow: 0 8px 0 #2ed573; margin: 20px auto; display: block;
+    }
+    .buzzer-btn:active { box-shadow: none; transform: translateY(8px); }
+    .buzzer-btn:disabled { background: #a4b0be; border-color: #ced6e0; }
+
+    /* ホスト画面用スタイル */
+    .host-ctrl { display: flex; gap: 10px; justify-content: center; }
+    .btn-correct { background: #2ed573; }
+    .btn-wrong { background: #ffa502; }
+    .btn-reset { background: #ff4757; }
+    ul { list-style: none; padding: 0; }
+    li { background: #f1f2f6; margin: 5px 0; padding: 10px; border-radius: 6px; display: flex; justify-content: space-between; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <!-- ロール選択 -->
+  <div id="role-select">
+    <h2>モードを選択</h2>
+    <button onclick="selectRole('player')">プレイヤー（スマホ）</button>
+    <button onclick="selectRole('host')" style="background:#2f3542;">ホスト（管理画面）</button>
+  </div>
+
+  <!-- プレイヤー用画面 -->
+  <div id="player-ui" style="display:none;">
+    <div id="join-form">
+      <h3>名前を入力して参加</h3>
+      <input type="text" id="player-name" placeholder="ニックネーム">
+      <button onclick="joinGame()">参加する</button>
+    </div>
+    <div id="buzzer-area" style="display:none;">
+      <h2 id="player-status">準備完了！</h2>
+      <button id="buzzer-btn" class="buzzer-btn" onclick="pushBuzzer()" disabled>押す！</button>
+    </div>
+  </div>
+
+  <!-- ホスト用画面 -->
+  <div id="host-ui" style="display:none;">
+    <h2>👑 ホスト管理画面</h2>
+    <h1 id="winner-display" style="color:#ff4757; min-height: 40px;">- 早押し待ち -</h1>
+    <div class="host-ctrl">
+      <button class="btn-reset" onclick="resetBuzzer()">早押し解禁</button>
+      <button class="btn-correct" onclick="judge(true)">正解 (+1pt)</button>
+      <button class="btn-wrong" onclick="judge(false)">不正解</button>
+    </div>
+    <h3>参加者スコアボード</h3>
+    <ul id="score-list"></ul>
+  </div>
+</div>
+
+<!-- Firebase SDK (v9 互換モード) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+<script>
+  // ★ ここを自分のFirebaseプロジェクトのURLに変更！ → 変更済み
+ const firebaseConfig = {
+    apiKey: "AIzaSyAbKFxJ4eYrv4XppmYLCJ_5hqdPyeZMt-g",
+    authDomain: "intro-don-f34f7.firebaseapp.com",
+    databaseURL: "https://intro-don-f34f7-default-rtdb.firebaseio.com",
+    projectId: "intro-don-f34f7",
+    storageBucket: "intro-don-f34f7.firebasestorage.app",
+    messagingSenderId: "261492296876",
+    appId: "1:261492296876:web:fd9458b13e7b4c252a2309",
+    measurementId: "G-GB4YR8MG6T"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  let myName = "";
+  let isHost = false;
+
+  function selectRole(role) {
+    document.getElementById('role-select').style.display = 'none';
+    if (role === 'player') {
+      document.getElementById('player-ui').style.display = 'block';
+    } else {
+      isHost = true;
+      document.getElementById('host-ui').style.display = 'block';
+      initHost();
+    }
+  }
+
+  // --- プレイヤー処理 ---
+  function joinGame() {
+    myName = document.getElementById('player-name').value.trim();
+    if (!myName) return alert("名前を入力してください");
+    
+    // スコア初期登録
+    db.ref('players/' + myName).set({ score: 0 });
+    document.getElementById('join-form').style.display = 'none';
+    document.getElementById('buzzer-area').style.display = 'block';
+    
+    // 状態を監視
+    listenState();
+  }
+
+  function pushBuzzer() {
+    // トランザクション処理で一番乗りを確定させる
+    db.ref('currentAnswerer').transaction((current) => {
+      if (current === null) {
+        return myName; // 自分が一番乗り！
+      }
+      return; // すでに誰かが押している
+    });
+  }
+
+  function listenState() {
+    db.ref('currentAnswerer').on('value', (snapshot) => {
+      const winner = snapshot.val();
+      const btn = document.getElementById('buzzer-btn');
+      const status = document.getElementById('player-status');
+
+      if (winner === null) {
+        btn.disabled = false;
+        status.innerText = "ボタンを押せ！";
+        status.style.color = "#2ed573";
+      } else {
+        btn.disabled = true;
+        if (winner === myName) {
+          status.innerText = "🎉 あなたが最速です！解答してください！";
+          status.style.color = "#ff4757";
+        } else {
+          status.innerText = `${winner} さんが押しました！`;
+          status.style.color = "#747d8c";
+        }
+      }
+    });
+  }
+
+  // --- ホスト処理 ---
+  function initHost() {
+    // 回答者の監視
+    db.ref('currentAnswerer').on('value', (snapshot) => {
+      const winner = snapshot.val();
+      const display = document.getElementById('winner-display');
+      if (winner) {
+        display.innerText = `🔔 ${winner} さん！`;
+      } else {
+        display.innerText = "- 早押し受付中 -";
+      }
+    });
+
+    // スコアボードの更新
+    db.ref('players').on('value', (snapshot) => {
+      const players = snapshot.val() || {};
+      const list = document.getElementById('score-list');
+      list.innerHTML = "";
+      Object.keys(players).forEach(name => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span>${name}</span> <strong>${players[name].score} pt</strong>`;
+        list.appendChild(li);
+      });
+    });
+  }
+
+  function resetBuzzer() {
+    db.ref('currentAnswerer').remove();
+  }
+
+  function judge(isCorrect) {
+    db.ref('currentAnswerer').once('value', (snapshot) => {
+      const winner = snapshot.val();
+      if (!winner) return;
+
+      if (isCorrect) {
+        // 加点
+        db.ref(`players/${winner}/score`).transaction(s => (s || 0) + 1);
+      }
+      resetBuzzer();
+    });
+  }
+</script>
+
+</body>
+</html>
