@@ -7,10 +7,15 @@
   <style>
     body { font-family: sans-serif; text-align: center; margin: 0; padding: 20px; background: #f0f2f5; }
     .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
-    input, button { font-size: 18px; padding: 12px; margin: 8px 0; width: 80%; border-radius: 8px; border: 1px solid #ccc; }
+    input, button { font-size: 18px; padding: 12px; margin: 8px 0; width: 80%; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
     button { cursor: pointer; background: #007bff; color: white; border: none; font-weight: bold; }
     button:disabled { background: #ccc; }
     
+    /* アイコン表示スタイル */
+    .icon-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin: 10px auto; display: block; border: 2px solid #ddd; }
+    .score-icon { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 10px; }
+    .winner-icon { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin: 10px auto; border: 4px solid #ff4757; }
+
     /* 早押しボタンのデザイン */
     .buzzer-btn {
       width: 200px; height: 200px; border-radius: 50%; font-size: 28px; background: #ff4757;
@@ -20,12 +25,13 @@
     .buzzer-btn:disabled { background: #a4b0be; border-color: #ced6e0; }
 
     /* ホスト画面用スタイル */
-    .host-ctrl { display: flex; gap: 10px; justify-content: center; }
+    .host-ctrl { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
     .btn-correct { background: #2ed573; }
     .btn-wrong { background: #ffa502; }
     .btn-reset { background: #ff4757; }
     ul { list-style: none; padding: 0; }
-    li { background: #f1f2f6; margin: 5px 0; padding: 10px; border-radius: 6px; display: flex; justify-content: space-between; }
+    li { background: #f1f2f6; margin: 5px 0; padding: 10px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; }
+    .player-info { display: flex; align-items: center; }
   </style>
 </head>
 <body>
@@ -41,8 +47,13 @@
   <!-- プレイヤー用画面 -->
   <div id="player-ui" style="display:none;">
     <div id="join-form">
-      <h3>名前を入力して参加</h3>
+      <h3>エントリー</h3>
       <input type="text" id="player-name" placeholder="ニックネーム">
+      <div style="margin: 10px 0;">
+        <label style="font-size:14px; color:#666;">アイコン画像を選択：</label><br>
+        <input type="file" id="player-icon-input" accept="image/*" onchange="previewImage(event)">
+        <img id="icon-preview" class="icon-preview" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23ccc'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-size='40' fill='%23fff'>👤</text></svg>">
+      </div>
       <button onclick="joinGame()">参加する</button>
     </div>
     <div id="buzzer-area" style="display:none;">
@@ -54,7 +65,12 @@
   <!-- ホスト用画面 -->
   <div id="host-ui" style="display:none;">
     <h2>👑 ホスト管理画面</h2>
-    <h1 id="winner-display" style="color:#ff4757; min-height: 40px;">- 早押し待ち -</h1>
+    
+    <div id="winner-area">
+      <img id="winner-icon" class="winner-icon" style="display:none;">
+      <h1 id="winner-display" style="color:#ff4757; min-height: 40px; margin: 10px 0;">- 早押し受付中 -</h1>
+    </div>
+
     <div class="host-ctrl">
       <button class="btn-reset" onclick="resetBuzzer()">早押し解禁</button>
       <button class="btn-correct" onclick="judge(true)">正解 (+1pt)</button>
@@ -70,32 +86,55 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
 <script>
-  // ★ ここを自分のFirebaseプロジェクトのURLに変更！ → 変更済み
- const firebaseConfig = {
-    apiKey: "AIzaSyAbKFxJ4eYrv4XppmYLCJ_5hqdPyeZMt-g",
-    authDomain: "intro-don-f34f7.firebaseapp.com",
-    databaseURL: "https://intro-don-f34f7-default-rtdb.firebaseio.com",
-    projectId: "intro-don-f34f7",
-    storageBucket: "intro-don-f34f7.firebasestorage.app",
-    messagingSenderId: "261492296876",
-    appId: "1:261492296876:web:fd9458b13e7b4c252a2309",
-    measurementId: "G-GB4YR8MG6T"
+  // ★ ご自身のDatabase URLになっているか確認してください
+  const firebaseConfig = {
+    databaseURL: "https://intro-don-f34f7-default-rtdb.firebaseio.com"
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
   let myName = "";
-  let isHost = false;
+  let base64Image = "";
+
+  // デフォルトの人間アイコンSVG
+  const defaultIcon = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23ccc'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-size='40' fill='%23fff'>👤</text></svg>";
+  base64Image = defaultIcon;
+
+  window.addEventListener('DOMContentLoaded', () => {
+    if (location.hash === '#player') selectRole('player');
+  });
 
   function selectRole(role) {
     document.getElementById('role-select').style.display = 'none';
     if (role === 'player') {
       document.getElementById('player-ui').style.display = 'block';
     } else {
-      isHost = true;
       document.getElementById('host-ui').style.display = 'block';
       initHost();
     }
+  }
+
+  // 画像が選択されたらBase64に変換＆リサイズして軽量化
+  function previewImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        // データの肥大化を防ぐために200x200pxに圧縮
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 200;
+        canvas.height = 200;
+        ctx.drawImage(img, 0, 0, 200, 200);
+        base64Image = canvas.toDataURL('image/jpeg', 0.7);
+        document.getElementById('icon-preview').src = base64Image;
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
   }
 
   // --- プレイヤー処理 ---
@@ -103,42 +142,43 @@
     myName = document.getElementById('player-name').value.trim();
     if (!myName) return alert("名前を入力してください");
     
-    // スコア初期登録
-    db.ref('players/' + myName).set({ score: 0 });
+    // スコア＆画像を送信
+    db.ref('players/' + myName).set({
+      score: 0,
+      icon: base64Image
+    });
+
     document.getElementById('join-form').style.display = 'none';
     document.getElementById('buzzer-area').style.display = 'block';
-    
-    // 状態を監視
     listenState();
   }
 
   function pushBuzzer() {
-    // トランザクション処理で一番乗りを確定させる
     db.ref('currentAnswerer').transaction((current) => {
       if (current === null) {
-        return myName; // 自分が一番乗り！
+        return { name: myName, icon: base64Image };
       }
-      return; // すでに誰かが押している
+      return;
     });
   }
 
   function listenState() {
     db.ref('currentAnswerer').on('value', (snapshot) => {
-      const winner = snapshot.val();
+      const winnerData = snapshot.val();
       const btn = document.getElementById('buzzer-btn');
       const status = document.getElementById('player-status');
 
-      if (winner === null) {
+      if (!winnerData) {
         btn.disabled = false;
         status.innerText = "ボタンを押せ！";
         status.style.color = "#2ed573";
       } else {
         btn.disabled = true;
-        if (winner === myName) {
+        if (winnerData.name === myName) {
           status.innerText = "🎉 あなたが最速です！解答してください！";
           status.style.color = "#ff4757";
         } else {
-          status.innerText = `${winner} さんが押しました！`;
+          status.innerText = `${winnerData.name} さんが押しました！`;
           status.style.color = "#747d8c";
         }
       }
@@ -147,42 +187,51 @@
 
   // --- ホスト処理 ---
   function initHost() {
-    // 回答者の監視
     db.ref('currentAnswerer').on('value', (snapshot) => {
-      const winner = snapshot.val();
+      const winnerData = snapshot.val();
       const display = document.getElementById('winner-display');
-      if (winner) {
-        display.innerText = `🔔 ${winner} さん！`;
+      const iconImg = document.getElementById('winner-icon');
+
+      if (winnerData) {
+        display.innerText = `🔔 ${winnerData.name} さん！`;
+        iconImg.src = winnerData.icon || defaultIcon;
+        iconImg.style.display = 'block';
       } else {
         display.innerText = "- 早押し受付中 -";
+        iconImg.style.display = 'none';
       }
     });
 
-    // スコアボードの更新
     db.ref('players').on('value', (snapshot) => {
       const players = snapshot.val() || {};
       const list = document.getElementById('score-list');
       list.innerHTML = "";
       Object.keys(players).forEach(name => {
+        const p = players[name];
         const li = document.createElement('li');
-        li.innerHTML = `<span>${name}</span> <strong>${players[name].score} pt</strong>`;
+        li.innerHTML = `
+          <div class="player-info">
+            <img class="score-icon" src="${p.icon || defaultIcon}">
+            <span>${name}</span>
+          </div>
+          <strong>${p.score || 0} pt</strong>
+        `;
         list.appendChild(li);
       });
     });
   }
 
   function resetBuzzer() {
-    db.ref('currentAnswerer').remove();
+    db.ref('currentAnswerer').set(null);
   }
 
   function judge(isCorrect) {
     db.ref('currentAnswerer').once('value', (snapshot) => {
-      const winner = snapshot.val();
-      if (!winner) return;
+      const winnerData = snapshot.val();
+      if (!winnerData) return;
 
       if (isCorrect) {
-        // 加点
-        db.ref(`players/${winner}/score`).transaction(s => (s || 0) + 1);
+        db.ref(`players/${winnerData.name}/score`).transaction(s => (s || 0) + 1);
       }
       resetBuzzer();
     });
