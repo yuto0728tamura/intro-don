@@ -1,156 +1,119 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
   <title>イントロどん！</title>
   <style>
-    * { box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      margin: 0; padding: 16px; background: #f0f2f5; color: #2f3542;
+    *{box-sizing:border-box}
+    body{
+      margin:0;padding:14px;background:#eef1f5;color:#202633;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
     }
-    .card {
-      background: white; padding: 20px; border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,.08);
-      max-width: 720px; margin: 0 auto;
+    .card{max-width:760px;margin:0 auto;background:#fff;border-radius:20px;padding:20px;box-shadow:0 8px 28px rgba(0,0,0,.09)}
+    h1,h2,h3{margin:6px 0 12px}
+    p{margin:8px 0}
+    input,button{font:inherit}
+    input[type="text"],input:not([type]),input[type="file"]{
+      width:100%;padding:13px 14px;border:1px solid #d9dee7;border-radius:11px;background:#fff;
     }
-    h1,h2,h3 { margin-top: 8px; }
-    input, button {
-      font-size: 17px; padding: 12px; margin: 6px 0;
-      border-radius: 10px; border: 1px solid #dfe4ea; width: 100%;
+    input[type="file"]{padding:10px}
+    button{
+      width:100%;min-height:48px;margin:5px 0;padding:11px 14px;border:0;border-radius:11px;
+      background:#2563eb;color:#fff;font-weight:800;cursor:pointer;touch-action:manipulation;
     }
-    input { background:#fff; }
-    button {
-      cursor: pointer; background: #007bff; color: white; border: none;
-      font-weight: bold; min-height: 48px;
+    button:disabled{background:#cbd2dc;color:#fff;cursor:not-allowed}
+    .secondary{background:#64748b}.green{background:#16a34a}.orange{background:#f59e0b}
+    .red{background:#ef4444}.dark{background:#111827}
+    .hidden{display:none!important}
+    .small{font-size:13px;color:#667085}
+    .muted{color:#667085}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+    .badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#eef2f7;font-size:13px;font-weight:800;white-space:nowrap}
+    .join-code{font-size:38px;letter-spacing:7px;font-weight:900;text-align:center;padding:15px;background:#f1f5f9;border-radius:14px}
+    .notice{padding:11px 13px;border-radius:11px;background:#fff7df;color:#72520b}
+    .status{padding:14px;border-radius:12px;background:#f1f5f9;text-align:center;font-weight:800;margin:10px 0}
+    .winner-box{text-align:center;background:#fff5f5;border:2px solid #fecaca;border-radius:16px;padding:16px;margin:14px 0}
+    .winner-name{font-size:30px;font-weight:900;color:#ef4444;min-height:38px}
+    .winner-icon{width:112px;height:112px;border-radius:50%;object-fit:cover;border:4px solid #ef4444;margin:4px auto 8px;display:block}
+    .answer{background:#f8fafc;border-radius:12px;padding:12px;margin:10px 0}
+    .host-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .host-controls .wide{grid-column:1/-1}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .score-list{list-style:none;padding:0;margin:8px 0}
+    .score-list li{
+      background:#f1f5f9;margin:6px 0;padding:10px 12px;border-radius:11px;
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
     }
-    button:disabled { background: #c8cdd3; cursor: not-allowed; }
-    .secondary { background:#57606f; }
-    .green { background:#2ed573; }
-    .orange { background:#ffa502; }
-    .red { background:#ff4757; }
-    .dark { background:#2f3542; }
-    .small { font-size: 13px; color:#747d8c; }
-    .hidden { display:none !important; }
-
-    .topbar {
-      display:flex; justify-content:space-between; align-items:center;
-      gap:10px; margin-bottom:12px;
+    .player-info{display:flex;align-items:center;min-width:0}
+    .player-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .rank{width:30px;font-weight:900}
+    .score-icon{width:42px;height:42px;border-radius:50%;object-fit:cover;margin-right:10px}
+    .icon-preview{width:90px;height:90px;border-radius:50%;object-fit:cover;display:block;margin:10px auto;border:3px solid #ddd}
+    .buzzer-btn{
+      width:min(70vw,300px);height:min(70vw,300px);border-radius:50%;font-size:34px;
+      background:#ef4444;color:#fff;border:10px solid #fb7185;
+      box-shadow:0 10px 0 #16a34a;margin:24px auto;display:block;
     }
-    .badge {
-      display:inline-block; padding:6px 10px; border-radius:999px;
-      background:#f1f2f6; font-size:13px; font-weight:bold;
-    }
-
-    .icon-preview {
-      width:90px; height:90px; border-radius:50%; object-fit:cover;
-      display:block; margin:10px auto; border:3px solid #ddd;
-    }
-    .score-icon {
-      width:42px; height:42px; border-radius:50%; object-fit:cover;
-      vertical-align:middle; margin-right:10px;
-    }
-    .winner-icon {
-      width:120px; height:120px; border-radius:50%; object-fit:cover;
-      margin:8px auto; border:4px solid #ff4757;
-    }
-
-    .buzzer-btn {
-      width: min(65vw, 280px); height: min(65vw, 280px);
-      border-radius:50%; font-size:32px; background:#ff4757;
-      color:white; border:10px solid #ff6b81;
-      box-shadow:0 10px 0 #2ed573; margin:24px auto; display:block;
-    }
-    .buzzer-btn:active:not(:disabled) {
-      box-shadow:none; transform:translateY(10px);
-    }
-
-    .status {
-      padding:14px; border-radius:12px; background:#f1f2f6;
-      text-align:center; font-weight:bold; margin:10px 0;
-    }
-    .winner-box {
-      text-align:center; background:#fff4f4; border:2px solid #ff6b81;
-      border-radius:16px; padding:16px; margin:14px 0;
-    }
-    .winner-name { font-size:30px; font-weight:800; color:#ff4757; }
-    .answer {
-      background:#f8f9fa; border-radius:12px; padding:12px;
-      margin:10px 0; font-size:16px;
-    }
-    .host-controls {
-      display:grid; grid-template-columns:1fr 1fr; gap:8px;
-    }
-    .host-controls .wide { grid-column:1 / -1; }
-
-    .score-list { list-style:none; padding:0; margin:8px 0; }
-    .score-list li {
-      background:#f1f2f6; margin:6px 0; padding:10px 12px;
-      border-radius:10px; display:flex; align-items:center;
-      justify-content:space-between; gap:10px;
-    }
-    .player-info { display:flex; align-items:center; min-width:0; }
-    .player-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .rank { width:30px; font-weight:800; }
-
-    .question-list {
-      max-height:240px; overflow:auto; border:1px solid #eee;
-      border-radius:10px; padding:6px; margin-top:8px;
-    }
-    .question-row {
-      display:flex; align-items:center; justify-content:space-between;
-      gap:8px; padding:8px; border-bottom:1px solid #eee;
-    }
-    .question-row:last-child { border-bottom:0; }
-    .question-row button { width:auto; min-height:36px; padding:7px 10px; font-size:13px; margin:0; }
-
-    .join-code {
-      font-size:34px; letter-spacing:6px; font-weight:900;
-      text-align:center; padding:12px; background:#f1f2f6; border-radius:12px;
-    }
-    .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-    .player-count { font-weight:bold; }
-    .notice { padding:10px; border-radius:10px; background:#fff8e1; color:#795548; }
-    @media (max-width: 520px) {
-      body { padding:8px; }
-      .card { padding:14px; }
-      .grid2, .host-controls { grid-template-columns:1fr; }
-      .winner-name { font-size:26px; }
+    .buzzer-btn:active:not(:disabled){box-shadow:none;transform:translateY(10px)}
+    .question-list{max-height:250px;overflow:auto;border:1px solid #e5e7eb;border-radius:11px;padding:5px;margin-top:8px}
+    .question-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px;border-bottom:1px solid #e5e7eb}
+    .question-row:last-child{border-bottom:0}
+    .question-row button{width:auto;min-height:36px;padding:7px 10px;font-size:13px;margin:0}
+    .divider{border:0;border-top:1px solid #e5e7eb;margin:20px 0}
+    .center{text-align:center}
+    .role-buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .connection{font-size:12px}
+    .connection.ok{color:#16a34a}.connection.ng{color:#ef4444}
+    .finished{background:#e2e8f0;color:#334155}
+    @media(max-width:520px){
+      body{padding:7px}.card{padding:14px;border-radius:16px}
+      .host-controls,.grid2,.role-buttons{grid-template-columns:1fr}
+      .winner-name{font-size:25px}.join-code{font-size:32px}
     }
   </style>
 </head>
 <body>
-
 <div class="card">
-  <!-- モード選択 -->
-  <div id="role-select">
+
+  <section id="role-select">
     <h1>🎵 イントロどん！</h1>
     <p class="small">早押し・得点管理アプリ</p>
-    <button onclick="selectRole('host')" class="dark">👑 ホスト（管理画面）</button>
-    <button onclick="selectRole('player')">📱 プレイヤー（スマホ）</button>
-  </div>
+    <div class="role-buttons">
+      <button class="dark" onclick="selectRole('host')">👑 ホスト</button>
+      <button onclick="selectRole('player')">📱 参加者</button>
+    </div>
+    <button id="resume-host-btn" class="secondary hidden" onclick="showHostResume()">ホストとしてゲームを再開</button>
+  </section>
 
-  <!-- 共通：ゲームID -->
-  <div id="game-form" class="hidden">
-    <h2 id="game-form-title">ゲームに参加</h2>
-    <input id="game-code-input" maxlength="8" placeholder="ゲームID（例：A7K3）" autocomplete="off">
+  <section id="game-form" class="hidden">
+    <h2>📱 ゲームに参加</h2>
+    <input id="game-code-input" maxlength="8" placeholder="ゲームID（例：A7K3）" autocomplete="off" autocapitalize="characters">
     <button onclick="continueWithGame()">次へ</button>
     <button onclick="backToRoleSelect()" class="secondary">戻る</button>
-  </div>
+  </section>
 
-  <!-- プレイヤー -->
-  <div id="player-ui" class="hidden">
+  <section id="host-resume-form" class="hidden">
+    <h2>👑 ホストとして再開</h2>
+    <p class="small">以前のゲームIDを入力してください。</p>
+    <input id="host-resume-code" maxlength="8" placeholder="ゲームID（例：A7K3）" autocomplete="off" autocapitalize="characters">
+    <button onclick="resumeHost()">再開する</button>
+    <button onclick="backToRoleSelect()" class="secondary">戻る</button>
+  </section>
+
+  <section id="player-ui" class="hidden">
     <div id="join-form">
       <div class="topbar">
-        <h2>📱 プレイヤー</h2>
+        <h2>📱 参加者</h2>
         <span id="player-game-badge" class="badge"></span>
       </div>
-      <input type="text" id="player-name" maxlength="20" placeholder="ニックネーム" autocomplete="off">
-      <div style="margin:10px 0;text-align:center;">
+      <input id="player-name" type="text" maxlength="20" placeholder="ニックネーム" autocomplete="off">
+      <div class="center" style="margin:12px 0">
         <label class="small">アイコン画像（任意）</label>
         <input type="file" id="player-icon-input" accept="image/*" onchange="previewImage(event)">
-        <img id="icon-preview" class="icon-preview">
+        <img id="icon-preview" class="icon-preview" alt="アイコン">
       </div>
       <button onclick="joinGame()">参加する</button>
     </div>
@@ -164,31 +127,33 @@
       <button id="buzzer-btn" class="buzzer-btn" onclick="pushBuzzer()" disabled>押す！</button>
       <button onclick="leaveGame()" class="secondary">退出</button>
     </div>
-  </div>
+  </section>
 
-  <!-- ホスト -->
-  <div id="host-ui" class="hidden">
+  <section id="host-ui" class="hidden">
     <div class="topbar">
       <h2>👑 ホスト</h2>
-      <span id="host-game-badge" class="badge"></span>
+      <div>
+        <span id="host-game-badge" class="badge"></span>
+        <span id="connection-status" class="connection ok">接続中</span>
+      </div>
     </div>
 
     <div class="join-code" id="host-game-code"></div>
-    <p class="small" style="text-align:center;">このゲームIDを参加者に共有してください</p>
+    <p class="small center">このゲームIDを参加者に共有してください</p>
 
     <div class="answer">
-      <strong>現在の曲</strong>
-      <input id="song-title" placeholder="曲名を入力（参加者には表示しません）">
+      <strong>🎵 現在の曲</strong>
+      <input id="song-title" type="text" maxlength="100" placeholder="曲名を入力（参加者には表示しません）">
     </div>
 
     <div class="winner-box">
-      <img id="winner-icon" class="winner-icon hidden">
-      <div id="winner-display" class="winner-name">- 早押し受付中 -</div>
-      <div id="winner-state" class="small">受付停止中</div>
+      <img id="winner-icon" class="winner-icon hidden" alt="回答者">
+      <div id="winner-display" class="winner-name">-</div>
+      <div id="winner-state" class="small">早押し受付停止中</div>
     </div>
 
     <div class="host-controls">
-      <button class="green wide" id="start-buzzer-btn" onclick="resetBuzzer()">🔔 早押し開始</button>
+      <button class="green wide" id="start-buzzer-btn" onclick="startBuzzer()">🔔 早押し開始</button>
       <button class="green" onclick="judge(true)">⭕ 正解 +1</button>
       <button class="orange" onclick="judge(false)">❌ 不正解</button>
     </div>
@@ -198,28 +163,28 @@
       <button class="red" onclick="finishGame()">🏁 ゲーム終了</button>
     </div>
 
-    <hr>
+    <hr class="divider">
     <h3>📊 スコアボード <span id="host-player-count" class="small"></span></h3>
     <ul id="score-list" class="score-list"></ul>
 
-    <hr>
+    <hr class="divider">
     <h3>🎵 問題履歴</h3>
     <button class="secondary" onclick="saveCurrentQuestion()">現在の曲を問題履歴に保存</button>
     <div id="question-list" class="question-list"></div>
 
-    <div class="notice" style="margin-top:12px;">
-      ※ 曲の再生・停止は手元の音楽プレイヤーで行ってください。
+    <div class="notice" style="margin-top:12px">
+      ※ 曲の再生・停止はホスト側の音楽プレイヤーで行ってください。
     </div>
-  </div>
+  </section>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-
 <script>
 const firebaseConfig = {
   databaseURL: "https://intro-don-f34f7-default-rtdb.firebaseio.com"
 };
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -228,10 +193,10 @@ let myId = "";
 let myName = "";
 let base64Image = "";
 let listeners = [];
-let hostGameCode = "";
+let isHost = false;
 
 const defaultIcon =
-  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23ccc'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-size='40' fill='%23fff'>👤</text></svg>";
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23cbd5e1'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-size='40' fill='%23fff'>👤</text></svg>";
 
 base64Image = defaultIcon;
 
@@ -240,11 +205,14 @@ function gameRef(path="") {
 }
 
 function makeId() {
-  return Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
+  return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-6);
 }
 
 function makeGameCode() {
-  return Math.random().toString(36).substring(2, 6).toUpperCase();
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for(let i=0;i<4;i++) code += chars[Math.floor(Math.random()*chars.length)];
+  return code;
 }
 
 function clearListeners() {
@@ -257,52 +225,92 @@ function watch(ref, event, cb) {
   listeners.push({ref, event, cb});
 }
 
+function showOnly(id) {
+  ["role-select","game-form","host-resume-form","player-ui","host-ui"].forEach(x => {
+    document.getElementById(x).classList.add("hidden");
+  });
+  if(id) document.getElementById(id).classList.remove("hidden");
+}
+
 function selectRole(role) {
-  document.getElementById("role-select").classList.add("hidden");
-  if (role === "host") {
+  if(role === "host") {
     createGame();
   } else {
-    document.getElementById("game-form").classList.remove("hidden");
-    document.getElementById("game-form-title").innerText = "ゲームに参加";
+    showOnly("game-form");
   }
 }
 
 function backToRoleSelect() {
-  document.getElementById("game-form").classList.add("hidden");
-  document.getElementById("role-select").classList.remove("hidden");
+  clearListeners();
+  showOnly("role-select");
+}
+
+function showHostResume() {
+  document.getElementById("host-resume-code").value = localStorage.getItem("introDonHostGame") || "";
+  showOnly("host-resume-form");
 }
 
 async function createGame() {
-  hostGameCode = makeGameCode();
-  gameId = hostGameCode;
+  clearListeners();
+  isHost = true;
+
+  let code = "";
+  for(let i=0;i<10;i++){
+    const candidate = makeGameCode();
+    const snap = await db.ref("games/" + candidate).once("value");
+    if(!snap.exists()){ code = candidate; break; }
+  }
+  if(!code) return alert("ゲームIDを作成できませんでした。もう一度お試しください。");
+
+  gameId = code;
   await gameRef().set({
-    code: hostGameCode,
+    code: gameId,
     status: "waiting",
-    buzzerOpen: false,
-    currentAnswerer: null,
-    createdAt: firebase.database.ServerValue.TIMESTAMP
+    createdAt: firebase.database.ServerValue.TIMESTAMP,
+    buzzer: { open:false, winner:null }
   });
-  document.getElementById("host-ui").classList.remove("hidden");
-  document.getElementById("host-game-code").innerText = hostGameCode;
-  document.getElementById("host-game-badge").innerText = "ID " + hostGameCode;
+
+  localStorage.setItem("introDonHostGame", gameId);
+  showOnly("host-ui");
+  document.getElementById("host-game-code").innerText = gameId;
+  document.getElementById("host-game-badge").innerText = "ID " + gameId;
+  initHost();
+}
+
+async function resumeHost() {
+  const code = document.getElementById("host-resume-code").value.trim().toUpperCase();
+  if(!code) return alert("ゲームIDを入力してください");
+
+  const snap = await db.ref("games/" + code).once("value");
+  if(!snap.exists()) return alert("そのゲームIDは見つかりません");
+
+  gameId = code;
+  isHost = true;
+  localStorage.setItem("introDonHostGame", gameId);
+  showOnly("host-ui");
+  document.getElementById("host-game-code").innerText = gameId;
+  document.getElementById("host-game-badge").innerText = "ID " + gameId;
   initHost();
 }
 
 async function continueWithGame() {
   const code = document.getElementById("game-code-input").value.trim().toUpperCase();
-  if (!code) return alert("ゲームIDを入力してください");
+  if(!code) return alert("ゲームIDを入力してください");
+
   const snap = await db.ref("games/" + code).once("value");
-  if (!snap.exists()) return alert("そのゲームIDは見つかりません");
+  if(!snap.exists()) return alert("そのゲームIDは見つかりません");
+  if(snap.val().status === "finished") return alert("このゲームは終了しています");
+
   gameId = code;
-  document.getElementById("game-form").classList.add("hidden");
-  document.getElementById("player-ui").classList.remove("hidden");
+  isHost = false;
+  showOnly("player-ui");
   document.getElementById("player-game-badge").innerText = "ID " + gameId;
 }
 
 function previewImage(event) {
   const file = event.target.files[0];
-  if (!file) return;
-  if (file.size > 8 * 1024 * 1024) return alert("画像は8MB以下にしてください");
+  if(!file) return;
+  if(file.size > 8 * 1024 * 1024) return alert("画像は8MB以下にしてください");
 
   const reader = new FileReader();
   reader.onload = e => {
@@ -312,10 +320,9 @@ function previewImage(event) {
       canvas.width = 200; canvas.height = 200;
       const ctx = canvas.getContext("2d");
       const size = Math.min(img.width, img.height);
-      const sx = (img.width - size) / 2;
-      const sy = (img.height - size) / 2;
-      ctx.drawImage(img, sx, sy, size, size, 0, 0, 200, 200);
-      base64Image = canvas.toDataURL("image/jpeg", 0.7);
+      const sx = (img.width-size)/2, sy = (img.height-size)/2;
+      ctx.drawImage(img,sx,sy,size,size,0,0,200,200);
+      base64Image = canvas.toDataURL("image/jpeg",0.72);
       document.getElementById("icon-preview").src = base64Image;
     };
     img.src = e.target.result;
@@ -325,8 +332,8 @@ function previewImage(event) {
 
 function joinGame() {
   myName = document.getElementById("player-name").value.trim();
-  if (!myName) return alert("名前を入力してください");
-  if (!gameId) return alert("ゲームIDがありません");
+  if(!myName) return alert("名前を入力してください");
+  if(!gameId) return alert("ゲームIDがありません");
 
   myId = makeId();
   const playerRef = gameRef("players/" + myId);
@@ -337,58 +344,74 @@ function joinGame() {
     icon: base64Image,
     joinedAt: firebase.database.ServerValue.TIMESTAMP
   }).then(() => {
+    // 通信が切れたら自動的に参加者を削除
+    playerRef.onDisconnect().remove();
+
     document.getElementById("join-form").classList.add("hidden");
     document.getElementById("buzzer-area").classList.remove("hidden");
     document.getElementById("player-display-name").innerText = myName;
     listenPlayer();
+  }).catch(err => {
+    alert("参加できませんでした: " + err.message);
   });
 }
 
 function pushBuzzer() {
-  if (!myId) return;
-  gameRef("currentAnswerer").transaction(current => {
-    if (current === null) {
-      return {
+  if(!myId || !gameId) return;
+
+  // 「受付中」かつ「まだ回答者なし」を同一トランザクションで判定。
+  // 30〜50人が同時に押しても、Firebase側で1人だけがwinnerになります。
+  gameRef("buzzer").transaction(state => {
+    state = state || {open:false, winner:null};
+    if(state.open && !state.winner) {
+      state.winner = {
         id: myId,
         name: myName,
         icon: base64Image,
         pushedAt: firebase.database.ServerValue.TIMESTAMP
       };
     }
-    return;
+    return state;
   });
 }
 
 function listenPlayer() {
   clearListeners();
 
-  watch(gameRef("currentAnswerer"), "value", snap => {
-    const winner = snap.val();
+  watch(gameRef("buzzer"), "value", snap => {
+    const buzzer = snap.val() || {open:false,winner:null};
     const btn = document.getElementById("buzzer-btn");
     const status = document.getElementById("player-status");
 
-    if (!winner) {
-      watchGameStateOnce();
+    if(buzzer.winner) {
+      btn.disabled = true;
+      if(buzzer.winner.id === myId) {
+        status.innerText = "🎉 あなたが最速です！";
+        status.style.color = "#ef4444";
+      } else {
+        status.innerText = buzzer.winner.name + " さんが押しました！";
+        status.style.color = "#667085";
+      }
       return;
     }
 
-    btn.disabled = true;
-    if (winner.id === myId) {
-      status.innerText = "🎉 あなたが最速です！";
-      status.style.color = "#ff4757";
+    if(buzzer.open) {
+      btn.disabled = false;
+      status.innerText = "🔥 押せ！";
+      status.style.color = "#16a34a";
     } else {
-      status.innerText = winner.name + " さんが押しました！";
-      status.style.color = "#747d8c";
+      btn.disabled = true;
+      status.innerText = "ホストの開始を待っています";
+      status.style.color = "#667085";
     }
   });
 
-  watch(gameRef("buzzerOpen"), "value", snap => {
-    const open = !!snap.val();
-    const winner = null;
-    document.getElementById("buzzer-btn").disabled = !open;
-    if (open) {
-      document.getElementById("player-status").innerText = "🔥 押せ！";
-      document.getElementById("player-status").style.color = "#2ed573";
+  watch(gameRef("status"), "value", snap => {
+    if(snap.val() === "finished") {
+      document.getElementById("buzzer-btn").disabled = true;
+      const status = document.getElementById("player-status");
+      status.innerText = "🏁 ゲーム終了";
+      status.classList.add("finished");
     }
   });
 
@@ -397,58 +420,138 @@ function listenPlayer() {
   });
 }
 
-function watchGameStateOnce() {
-  gameRef("buzzerOpen").once("value");
+function startBuzzer() {
+  gameRef("status").set("playing");
+  gameRef("buzzer").set({open:true,winner:null});
+}
+
+function clearCurrentAnswerer() {
+  gameRef("buzzer/winner").set(null).then(() => {
+    gameRef("buzzer/open").set(false);
+  });
+}
+
+async function judge(isCorrect) {
+  const snap = await gameRef("buzzer").once("value");
+  const buzzer = snap.val() || {};
+  const winner = buzzer.winner;
+
+  if(!winner) return alert("まだ回答者が決まっていません");
+
+  // 先に受付を閉じる
+  await gameRef("buzzer/open").set(false);
+
+  if(isCorrect && winner.id) {
+    await gameRef("players/" + winner.id + "/score").transaction(score => (score || 0) + 1);
+  }
+
+  await gameRef("buzzer/winner").set(null);
+}
+
+async function saveCurrentQuestion() {
+  const title = document.getElementById("song-title").value.trim();
+  if(!title) return alert("曲名を入力してください");
+
+  const snap = await gameRef("questions").once("value");
+  const qs = snap.val() || {};
+  const numbers = Object.values(qs).map(q => Number(q.number) || 0);
+  const number = numbers.length ? Math.max(...numbers) + 1 : 1;
+
+  await gameRef("questions").push({
+    number,
+    title,
+    savedAt: firebase.database.ServerValue.TIMESTAMP
+  });
+
+  alert("第" + number + "問として保存しました");
+}
+
+function deleteQuestion(id) {
+  if(confirm("この問題履歴を削除しますか？")) {
+    gameRef("questions/" + id).remove();
+  }
+}
+
+function finishGame() {
+  if(!confirm("ゲームを終了しますか？")) return;
+
+  gameRef("status").set("finished");
+  gameRef("buzzer").set({open:false,winner:null});
+  alert("ゲームを終了しました");
+}
+
+function leaveGame() {
+  if(myId) gameRef("players/" + myId).remove();
+  clearListeners();
+  location.reload();
 }
 
 function initHost() {
   clearListeners();
 
-  watch(gameRef("currentAnswerer"), "value", snap => {
-    const winner = snap.val();
+  watch(gameRef(".info/connected"), "value", snap => {
+    const el = document.getElementById("connection-status");
+    if(snap.val() === true) {
+      el.innerText = "● 接続中";
+      el.className = "connection ok";
+    } else {
+      el.innerText = "● 接続待ち";
+      el.className = "connection ng";
+    }
+  });
+
+  watch(gameRef("buzzer"), "value", snap => {
+    const buzzer = snap.val() || {open:false,winner:null};
+    const winner = buzzer.winner;
     const display = document.getElementById("winner-display");
     const icon = document.getElementById("winner-icon");
     const state = document.getElementById("winner-state");
+    const startBtn = document.getElementById("start-buzzer-btn");
 
-    if (winner) {
+    if(winner) {
       display.innerText = "🔔 " + winner.name + " さん";
       icon.src = winner.icon || defaultIcon;
       icon.classList.remove("hidden");
       state.innerText = "回答権を獲得しました";
-      state.style.color = "#ff4757";
+      state.style.color = "#ef4444";
     } else {
-      display.innerText = "- 早押し受付中 -";
+      display.innerText = buzzer.open ? "早押し受付中" : "-";
       icon.classList.add("hidden");
+      state.innerText = buzzer.open ? "回答者が決まるまで受付中" : "早押し受付停止中";
+      state.style.color = buzzer.open ? "#16a34a" : "#667085";
     }
+
+    startBtn.innerText = buzzer.open ? "🔴 早押し受付中" : "🔔 早押し開始";
+    startBtn.disabled = buzzer.open;
   });
 
-  watch(gameRef("buzzerOpen"), "value", snap => {
-    const open = !!snap.val();
-    document.getElementById("start-buzzer-btn").innerText =
-      open ? "🔴 早押し受付中" : "🔔 早押し開始";
-    document.getElementById("winner-state").innerText =
-      open ? "回答者が決まるまで受付中" : "受付停止中";
+  watch(gameRef("status"), "value", snap => {
+    if(snap.val() === "finished") {
+      document.getElementById("start-buzzer-btn").disabled = true;
+      document.getElementById("start-buzzer-btn").innerText = "🏁 ゲーム終了";
+      document.getElementById("winner-state").innerText = "ゲーム終了";
+    }
   });
 
   watch(gameRef("players"), "value", snap => {
     const players = snap.val() || {};
     const arr = Object.entries(players)
-      .map(([id,p]) => ({id, ...p}))
-      .sort((a,b) => (b.score || 0) - (a.score || 0));
+      .map(([id,p]) => ({id,...p}))
+      .sort((a,b) => (Number(b.score)||0) - (Number(a.score)||0));
 
     document.getElementById("host-player-count").innerText = "(" + arr.length + "人)";
     const list = document.getElementById("score-list");
     list.innerHTML = "";
 
-    arr.forEach((p, i) => {
+    arr.forEach((p,i) => {
       const li = document.createElement("li");
       li.innerHTML = `
         <div class="player-info">
           <span class="rank">${i+1}</span>
-          <img class="score-icon" src="${p.icon || defaultIcon}">
+          <img class="score-icon" src="${escapeHtml(p.icon || defaultIcon)}" alt="">
           <span class="player-name">${escapeHtml(p.name || "名無し")}</span>
         </div>
-        <strong>${p.score || 0} pt</strong>`;
+        <strong>${Number(p.score)||0} pt</strong>`;
       list.appendChild(li);
     });
   });
@@ -457,72 +560,18 @@ function initHost() {
     const qs = snap.val() || {};
     const list = document.getElementById("question-list");
     list.innerHTML = "";
-    Object.entries(qs).sort((a,b) => (a[1].number||0)-(b[1].number||0)).forEach(([id,q]) => {
-      const row = document.createElement("div");
-      row.className = "question-row";
-      row.innerHTML = `<span>第${q.number}問：${escapeHtml(q.title || "曲名未入力")}</span>
-                       <button class="red" onclick="deleteQuestion('${id}')">削除</button>`;
-      list.appendChild(row);
-    });
+
+    Object.entries(qs)
+      .sort((a,b) => (Number(a[1].number)||0) - (Number(b[1].number)||0))
+      .forEach(([id,q]) => {
+        const row = document.createElement("div");
+        row.className = "question-row";
+        row.innerHTML = `
+          <span>第${Number(q.number)||0}問：${escapeHtml(q.title || "曲名未入力")}</span>
+          <button class="red" onclick="deleteQuestion('${escapeHtml(id)}')">削除</button>`;
+        list.appendChild(row);
+      });
   });
-}
-
-function resetBuzzer() {
-  gameRef("currentAnswerer").set(null).then(() => {
-    gameRef("buzzerOpen").set(true);
-  });
-}
-
-function clearCurrentAnswerer() {
-  gameRef("currentAnswerer").set(null);
-}
-
-function judge(isCorrect) {
-  gameRef("currentAnswerer").once("value", snap => {
-    const winner = snap.val();
-    if (!winner) return alert("まだ回答者が決まっていません");
-
-    if (isCorrect && winner.id) {
-      gameRef("players/" + winner.id + "/score")
-        .transaction(score => (score || 0) + 1);
-    }
-    gameRef("buzzerOpen").set(false);
-    gameRef("currentAnswerer").set(null);
-  });
-}
-
-async function saveCurrentQuestion() {
-  const title = document.getElementById("song-title").value.trim();
-  if (!title) return alert("曲名を入力してください");
-
-  const snap = await gameRef("questions").once("value");
-  const qs = snap.val() || {};
-  const number = Object.keys(qs).length + 1;
-  await gameRef("questions").push({
-    number, title,
-    savedAt: firebase.database.ServerValue.TIMESTAMP
-  });
-  alert("第" + number + "問として保存しました");
-}
-
-function deleteQuestion(id) {
-  if (confirm("この問題履歴を削除しますか？")) {
-    gameRef("questions/" + id).remove();
-  }
-}
-
-function finishGame() {
-  if (!confirm("ゲームを終了しますか？")) return;
-  gameRef("status").set("finished");
-  gameRef("buzzerOpen").set(false);
-  gameRef("currentAnswerer").set(null);
-  alert("ゲームを終了しました");
-}
-
-function leaveGame() {
-  if (myId) gameRef("players/" + myId).remove();
-  clearListeners();
-  location.reload();
 }
 
 function escapeHtml(value) {
@@ -534,10 +583,10 @@ function escapeHtml(value) {
     .replaceAll("'","&#039;");
 }
 
+// 初期表示
 document.getElementById("icon-preview").src = defaultIcon;
-
-if (location.hash === "#player") {
-  selectRole("player");
+if(localStorage.getItem("introDonHostGame")) {
+  document.getElementById("resume-host-btn").classList.remove("hidden");
 }
 </script>
 </body>
