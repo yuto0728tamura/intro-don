@@ -9,7 +9,8 @@
   <style>
     *{box-sizing:border-box}
     body{
-      margin:0;padding:14px;background:#eef1f5;color:#202633;
+      margin:0;background:#eef1f5;color:#202633;
+      padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
     }
     .card{max-width:760px;margin:0 auto;background:#fff;border-radius:20px;padding:20px;box-shadow:0 8px 28px rgba(0,0,0,.09)}
@@ -69,7 +70,8 @@
     .connection.ok{color:#16a34a}.connection.ng{color:#ef4444}
     .finished{background:#e2e8f0;color:#334155}
     @media(max-width:520px){
-      body{padding:7px}.card{padding:14px;border-radius:16px}
+      body{padding:max(7px,env(safe-area-inset-top)) max(7px,env(safe-area-inset-right)) max(7px,env(safe-area-inset-bottom)) max(7px,env(safe-area-inset-left))}
+      .card{padding:14px;border-radius:16px}
       .host-controls,.grid2,.role-buttons{grid-template-columns:1fr}
       .winner-name{font-size:25px}.join-code{font-size:32px}
     }
@@ -82,7 +84,7 @@
     <h1>🎵 イントロどん！</h1>
     <p class="small">早押し・得点管理アプリ</p>
     <div class="role-buttons">
-      <button class="dark" onclick="selectRole('host')">👑 ホスト</button>
+      <button id="host-role-btn" class="dark" onclick="selectRole('host')">👑 ホスト</button>
       <button onclick="selectRole('player')">📱 参加者</button>
     </div>
     <button id="resume-host-btn" class="secondary hidden" onclick="showHostResume()">ホストとしてゲームを再開</button>
@@ -185,8 +187,38 @@ const firebaseConfig = {
   databaseURL: "https://intro-don-f34f7-default-rtdb.firebaseio.com"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+let db = null;
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+} catch(err) {
+  console.error("Firebase初期化エラー:", err);
+}
+
+// 通信が返ってこない時に無限に待たないためのタイムアウト
+function withTimeout(promise, ms = 8000) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), ms))
+  ]);
+}
+
+function explainError(err) {
+  const msg = (err && err.message) ? err.message : String(err);
+  if(msg === "timeout") {
+    return "サーバーから応答がありません。\nネット接続と、Firebaseの databaseURL を確認してください。";
+  }
+  if(/permission[_ ]denied/i.test(msg)) {
+    return "Firebaseのルールで拒否されました。\nRealtime Database の「ルール」を確認してください。\n（テストモードは30日で期限切れになります）";
+  }
+  return msg;
+}
+
+function dbReady() {
+  if(db) return true;
+  alert("Firebaseを読み込めませんでした。\nネット接続を確認して、ページを再読み込みしてください。");
+  return false;
+}
 
 let gameId = "";
 let myId = "";
@@ -194,6 +226,9 @@ let myName = "";
 let base64Image = "";
 let listeners = [];
 let isHost = false;
+let gameFinished = false; // ゲーム終了後に画面表示が上書きされるのを防ぐ
+let judging = false;      // 正解/不正解ボタンの連打による二重加点を防ぐ
+let joining = false;      // 「参加する」連打による二重登録を防ぐ
 
 const defaultIcon =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23cbd5e1'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-size='40' fill='%23fff'>👤</text></svg>";
@@ -250,61 +285,93 @@ function showHostResume() {
   showOnly("host-resume-form");
 }
 
+let creating = false;
 async function createGame() {
-  clearListeners();
-  isHost = true;
+  if(creating || !dbReady()) return;
+  creating = true;
+  const btn = document.getElementById("host-role-btn");
+  btn.disabled = true;
+  btn.innerText = "作成中…";
 
-  let code = "";
-  for(let i=0;i<10;i++){
-    const candidate = makeGameCode();
-    const snap = await db.ref("games/" + candidate).once("value");
-    if(!snap.exists()){ code = candidate; break; }
+  try {
+    clearListeners();
+    isHost = true;
+    gameFinished = false;
+
+    let code = "";
+    for(let i=0;i<10;i++){
+      const candidate = makeGameCode();
+      const snap = await withTimeout(db.ref("games/" + candidate).once("value"));
+      if(!snap.exists()){ code = candidate; break; }
+    }
+    if(!code) throw new Error("ゲームIDを作成できませんでした。もう一度お試しください。");
+
+    gameId = code;
+    await withTimeout(gameRef().set({
+      code: gameId,
+      status: "waiting",
+      createdAt: firebase.database.ServerValue.TIMESTAMP,
+      buzzer: { open:false, winner:null }
+    }));
+
+    localStorage.setItem("introDonHostGame", gameId);
+    showOnly("host-ui");
+    document.getElementById("host-game-code").innerText = gameId;
+    document.getElementById("host-game-badge").innerText = "ID " + gameId;
+    initHost();
+  } catch(err) {
+    console.error(err);
+    isHost = false;
+    alert("ゲームを作成できませんでした。\n" + explainError(err));
+  } finally {
+    creating = false;
+    btn.disabled = false;
+    btn.innerText = "👑 ホスト";
   }
-  if(!code) return alert("ゲームIDを作成できませんでした。もう一度お試しください。");
-
-  gameId = code;
-  await gameRef().set({
-    code: gameId,
-    status: "waiting",
-    createdAt: firebase.database.ServerValue.TIMESTAMP,
-    buzzer: { open:false, winner:null }
-  });
-
-  localStorage.setItem("introDonHostGame", gameId);
-  showOnly("host-ui");
-  document.getElementById("host-game-code").innerText = gameId;
-  document.getElementById("host-game-badge").innerText = "ID " + gameId;
-  initHost();
 }
 
 async function resumeHost() {
+  if(!dbReady()) return;
   const code = document.getElementById("host-resume-code").value.trim().toUpperCase();
   if(!code) return alert("ゲームIDを入力してください");
 
-  const snap = await db.ref("games/" + code).once("value");
-  if(!snap.exists()) return alert("そのゲームIDは見つかりません");
+  try {
+    const snap = await withTimeout(db.ref("games/" + code).once("value"));
+    if(!snap.exists()) return alert("そのゲームIDは見つかりません");
 
-  gameId = code;
-  isHost = true;
-  localStorage.setItem("introDonHostGame", gameId);
-  showOnly("host-ui");
-  document.getElementById("host-game-code").innerText = gameId;
-  document.getElementById("host-game-badge").innerText = "ID " + gameId;
-  initHost();
+    gameId = code;
+    isHost = true;
+    gameFinished = false;
+    localStorage.setItem("introDonHostGame", gameId);
+    showOnly("host-ui");
+    document.getElementById("host-game-code").innerText = gameId;
+    document.getElementById("host-game-badge").innerText = "ID " + gameId;
+    initHost();
+  } catch(err) {
+    console.error(err);
+    alert("再開できませんでした。\n" + explainError(err));
+  }
 }
 
 async function continueWithGame() {
+  if(!dbReady()) return;
   const code = document.getElementById("game-code-input").value.trim().toUpperCase();
   if(!code) return alert("ゲームIDを入力してください");
 
-  const snap = await db.ref("games/" + code).once("value");
-  if(!snap.exists()) return alert("そのゲームIDは見つかりません");
-  if(snap.val().status === "finished") return alert("このゲームは終了しています");
+  try {
+    const snap = await withTimeout(db.ref("games/" + code).once("value"));
+    if(!snap.exists()) return alert("そのゲームIDは見つかりません");
+    if(snap.val().status === "finished") return alert("このゲームは終了しています");
 
-  gameId = code;
-  isHost = false;
-  showOnly("player-ui");
-  document.getElementById("player-game-badge").innerText = "ID " + gameId;
+    gameId = code;
+    isHost = false;
+    gameFinished = false;
+    showOnly("player-ui");
+    document.getElementById("player-game-badge").innerText = "ID " + gameId;
+  } catch(err) {
+    console.error(err);
+    alert("ゲームに接続できませんでした。\n" + explainError(err));
+  }
 }
 
 function previewImage(event) {
@@ -331,10 +398,12 @@ function previewImage(event) {
 }
 
 function joinGame() {
+  if(joining) return;
   myName = document.getElementById("player-name").value.trim();
   if(!myName) return alert("名前を入力してください");
   if(!gameId) return alert("ゲームIDがありません");
 
+  joining = true;
   myId = makeId();
   const playerRef = gameRef("players/" + myId);
 
@@ -352,6 +421,7 @@ function joinGame() {
     document.getElementById("player-display-name").innerText = myName;
     listenPlayer();
   }).catch(err => {
+    joining = false;
     alert("参加できませんでした: " + err.message);
   });
 }
@@ -383,6 +453,8 @@ function listenPlayer() {
     const btn = document.getElementById("buzzer-btn");
     const status = document.getElementById("player-status");
 
+    if(gameFinished) { btn.disabled = true; return; }
+
     if(buzzer.winner) {
       btn.disabled = true;
       if(buzzer.winner.id === myId) {
@@ -408,9 +480,11 @@ function listenPlayer() {
 
   watch(gameRef("status"), "value", snap => {
     if(snap.val() === "finished") {
+      gameFinished = true;
       document.getElementById("buzzer-btn").disabled = true;
       const status = document.getElementById("player-status");
       status.innerText = "🏁 ゲーム終了";
+      status.style.color = "";
       status.classList.add("finished");
     }
   });
@@ -432,20 +506,32 @@ function clearCurrentAnswerer() {
 }
 
 async function judge(isCorrect) {
-  const snap = await gameRef("buzzer").once("value");
-  const buzzer = snap.val() || {};
-  const winner = buzzer.winner;
+  if(judging) return; // 連打で二重に加点されるのを防ぐ
+  judging = true;
+  try {
+    const snap = await gameRef("buzzer").once("value");
+    const buzzer = snap.val() || {};
+    const winner = buzzer.winner;
 
-  if(!winner) return alert("まだ回答者が決まっていません");
+    if(!winner) return alert("まだ回答者が決まっていません");
 
-  // 先に受付を閉じる
-  await gameRef("buzzer/open").set(false);
+    // 先に受付を閉じる
+    await gameRef("buzzer/open").set(false);
 
-  if(isCorrect && winner.id) {
-    await gameRef("players/" + winner.id + "/score").transaction(score => (score || 0) + 1);
+    // 退出済みの参加者に加点して「名無し」が復活しないよう、存在確認してから加点
+    if(isCorrect && winner.id) {
+      const exists = (await gameRef("players/" + winner.id).once("value")).exists();
+      if(exists) {
+        await gameRef("players/" + winner.id + "/score").transaction(score => (score || 0) + 1);
+      }
+    }
+
+    await gameRef("buzzer/winner").set(null);
+  } catch(err) {
+    alert("判定に失敗しました: " + err.message);
+  } finally {
+    judging = false;
   }
-
-  await gameRef("buzzer/winner").set(null);
 }
 
 async function saveCurrentQuestion() {
@@ -481,15 +567,21 @@ function finishGame() {
 }
 
 function leaveGame() {
-  if(myId) gameRef("players/" + myId).remove();
   clearListeners();
-  location.reload();
+  const done = () => location.reload();
+  if(myId && gameId) {
+    // 削除が完了する前にリロードして消えないよう、完了を待つ
+    gameRef("players/" + myId).remove().then(done, done);
+  } else {
+    done();
+  }
 }
 
 function initHost() {
   clearListeners();
 
-  watch(gameRef(".info/connected"), "value", snap => {
+  // .info/connected はルート直下の特殊パス（games/XXXX/ の下に付けるとエラーになる）
+  watch(db.ref(".info/connected"), "value", snap => {
     const el = document.getElementById("connection-status");
     if(snap.val() === true) {
       el.innerText = "● 接続中";
@@ -507,6 +599,16 @@ function initHost() {
     const icon = document.getElementById("winner-icon");
     const state = document.getElementById("winner-state");
     const startBtn = document.getElementById("start-buzzer-btn");
+
+    if(gameFinished) {
+      display.innerText = "-";
+      icon.classList.add("hidden");
+      state.innerText = "ゲーム終了";
+      state.style.color = "#667085";
+      startBtn.innerText = "🏁 ゲーム終了";
+      startBtn.disabled = true;
+      return;
+    }
 
     if(winner) {
       display.innerText = "🔔 " + winner.name + " さん";
@@ -527,9 +629,11 @@ function initHost() {
 
   watch(gameRef("status"), "value", snap => {
     if(snap.val() === "finished") {
+      gameFinished = true;
       document.getElementById("start-buzzer-btn").disabled = true;
       document.getElementById("start-buzzer-btn").innerText = "🏁 ゲーム終了";
       document.getElementById("winner-state").innerText = "ゲーム終了";
+      document.getElementById("winner-state").style.color = "#667085";
     }
   });
 
