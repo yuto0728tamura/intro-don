@@ -29,6 +29,11 @@
     .secondary{background:#64748b}.green{background:#16a34a}.orange{background:#f59e0b}
     .red{background:#ef4444}.dark{background:#111827}
     .hidden{display:none!important}
+    .join-share{text-align:center;margin:10px 0}
+    #join-qr{display:inline-block;padding:10px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:6px}
+    #join-qr:empty{display:none}
+    #join-qr img,#join-qr canvas{display:block}
+    #join-link-text{word-break:break-all}
     .small{font-size:13px;color:#667085}
     .muted{color:#667085}
     .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
@@ -36,6 +41,10 @@
     .join-code{font-size:38px;letter-spacing:7px;font-weight:900;text-align:center;padding:15px;background:#f1f5f9;border-radius:14px}
     .notice{padding:11px 13px;border-radius:11px;background:#fff7df;color:#72520b}
     .status{padding:14px;border-radius:12px;background:#f1f5f9;text-align:center;font-weight:800;margin:10px 0}
+    .status.correct{background:#dcfce7;color:#166534}
+    .status.wrong{background:#fee2e2;color:#991b1b}
+    .status .result-main{font-size:24px}
+    .status .result-song{font-size:19px;margin-top:8px;word-break:break-word}
     .winner-box{text-align:center;background:#fff5f5;border:2px solid #fecaca;border-radius:16px;padding:16px;margin:14px 0}
     .winner-name{font-size:30px;font-weight:900;color:#ef4444;min-height:38px}
     .winner-icon{width:112px;height:112px;border-radius:50%;object-fit:cover;border:4px solid #ef4444;margin:4px auto 8px;display:block}
@@ -51,6 +60,39 @@
     .player-info{display:flex;align-items:center;min-width:0}
     .player-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .rank{width:30px;font-weight:900}
+    /* ---- モニター画面（大きな画面に映す用） ---- */
+    body.monitor{background:#0b1220;padding:0}
+    body.monitor .card{max-width:none;min-height:100vh;border-radius:0;background:transparent;box-shadow:none;color:#f1f5f9;padding:3vh 4vw}
+    .mon-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:2vh}
+    .mon-title{font-size:min(6vh,4.5vw);font-weight:900;margin:0}
+    .mon-tools{display:flex;align-items:center;gap:8px;flex-shrink:0}
+    .mon-badge{font-size:min(3vh,2vw);padding:.35em .9em;border-radius:999px;background:#1e293b;font-weight:800;white-space:nowrap}
+    .mon-badge.open{background:#15803d}
+    .mon-tool{width:auto;min-height:34px;margin:0;padding:6px 12px;font-size:13px;background:#1e293b;color:#94a3b8;font-weight:700}
+    .mon-row{display:flex;align-items:center;gap:1.6vw;background:#111c33;border-radius:16px;padding:.6vh 1.6vw;margin:.5vh 0;font-size:4vh;font-weight:800}
+    .mon-row.first{background:#3a2c08;box-shadow:inset 0 0 0 2px #f59e0b}
+    .mon-rank{width:2em;text-align:center;flex-shrink:0}
+    .mon-row img{width:1.35em;height:1.35em;border-radius:50%;object-fit:cover;flex-shrink:0}
+    .mon-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .mon-pt{font-variant-numeric:tabular-nums;flex-shrink:0}
+    .mon-pt small{font-size:.55em;color:#94a3b8;margin-left:.15em}
+    .mon-answer{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:72vh;text-align:center}
+    .mon-answer img{width:min(46vh,42vw);height:min(46vh,42vw);border-radius:50%;object-fit:cover;border:1.2vh solid #ef4444;box-shadow:0 0 0 1.4vh rgba(239,68,68,.25)}
+    .mon-winner-name{font-size:min(11vh,9vw);font-weight:900;margin-top:3vh;max-width:92vw;word-break:break-word}
+    .mon-count{font-size:min(3.4vh,2.6vw);color:#94a3b8;font-weight:800;margin-bottom:2vh}
+    .mon-lobby{display:flex;flex-wrap:wrap;gap:1.2vh 1vw}
+    .mon-chip{display:flex;align-items:center;gap:.6em;background:#111c33;border-radius:999px;padding:.35em 1em .35em .35em;font-size:min(2.8vh,2vw);font-weight:700;max-width:100%}
+    .mon-chip img{width:2em;height:2em;border-radius:50%;object-fit:cover}
+    .mon-empty{font-size:min(4vh,3vw);color:#94a3b8;text-align:center;margin-top:12vh}
+    @media(prefers-reduced-motion:no-preference){
+      .mon-answer{animation:mon-pop .22s ease-out}
+      @keyframes mon-pop{from{transform:scale(.9);opacity:0}to{transform:none;opacity:1}}
+    }
+    .rejoin-link{color:#94a3b8;text-decoration:underline;padding:8px}
+    .score-list li.offline{opacity:.55}
+    .offline-tag{font-size:11px;color:#667085;margin-left:6px;white-space:nowrap}
+    .score-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+    .score-right button{width:auto;min-height:30px;padding:3px 10px;font-size:12px;margin:0}
     .score-icon{width:42px;height:42px;border-radius:50%;object-fit:cover;margin-right:10px}
     .icon-preview{width:90px;height:90px;border-radius:50%;object-fit:cover;display:block;margin:10px auto;border:3px solid #ddd}
     .buzzer-btn{
@@ -86,14 +128,29 @@
     <div class="role-buttons">
       <button id="host-role-btn" class="dark" onclick="selectRole('host')">👑 ホスト</button>
       <button onclick="selectRole('player')">📱 参加者</button>
+      <button class="secondary" style="grid-column:1/-1" onclick="selectRole('monitor')">🖥 モニター（大画面表示）</button>
     </div>
     <button id="resume-host-btn" class="secondary hidden" onclick="showHostResume()">ホストとしてゲームを再開</button>
   </section>
 
   <section id="game-form" class="hidden">
     <h2>📱 ゲームに参加</h2>
-    <input id="game-code-input" maxlength="8" placeholder="ゲームID（例：A7K3）" autocomplete="off" autocapitalize="characters">
-    <button onclick="continueWithGame()">次へ</button>
+
+    <div id="game-code-field">
+      <label class="small" for="game-code-input">ゲームID</label>
+      <input id="game-code-input" maxlength="8" placeholder="ゲームID（例：A7K3）" autocomplete="off" autocapitalize="characters">
+    </div>
+
+    <label class="small" for="player-name" style="display:block;margin-top:12px">ニックネーム</label>
+    <input id="player-name" type="text" maxlength="20" placeholder="ニックネーム（ホスト画面に表示されます）" autocomplete="off">
+
+    <div class="center" style="margin:12px 0">
+      <label class="small">アイコン画像（任意）</label>
+      <input type="file" id="player-icon-input" accept="image/*" onchange="previewImage(event)">
+      <img id="icon-preview" class="icon-preview" alt="アイコン">
+    </div>
+
+    <button id="join-btn" onclick="joinGame()">参加する</button>
     <button onclick="backToRoleSelect()" class="secondary">戻る</button>
   </section>
 
@@ -105,29 +162,41 @@
     <button onclick="backToRoleSelect()" class="secondary">戻る</button>
   </section>
 
-  <section id="player-ui" class="hidden">
-    <div id="join-form">
-      <div class="topbar">
-        <h2>📱 参加者</h2>
-        <span id="player-game-badge" class="badge"></span>
-      </div>
-      <input id="player-name" type="text" maxlength="20" placeholder="ニックネーム" autocomplete="off">
-      <div class="center" style="margin:12px 0">
-        <label class="small">アイコン画像（任意）</label>
-        <input type="file" id="player-icon-input" accept="image/*" onchange="previewImage(event)">
-        <img id="icon-preview" class="icon-preview" alt="アイコン">
-      </div>
-      <button onclick="joinGame()">参加する</button>
-    </div>
+  <section id="monitor-form" class="hidden">
+    <h2>🖥 モニター表示</h2>
+    <p class="small">大きな画面に映す用の表示です。回答中は早押しした人、それ以外はポイント上位者を表示します。</p>
+    <input id="monitor-code-input" maxlength="8" placeholder="ゲームID（例：A7K3）" autocomplete="off" autocapitalize="characters">
+    <button onclick="startMonitor()">表示する</button>
+    <button onclick="backToRoleSelect()" class="secondary">戻る</button>
+  </section>
 
-    <div id="buzzer-area" class="hidden">
+  <section id="monitor-ui" class="hidden">
+    <div class="mon-head">
+      <h1 class="mon-title" id="mon-title">🏆 スコアボード</h1>
+      <div class="mon-tools">
+        <span id="mon-state" class="mon-badge hidden"></span>
+        <button class="mon-tool" id="monitor-sound-btn" onclick="toggleSound()">🔊 音ON</button>
+        <button class="mon-tool" onclick="toggleFullscreen()">⛶ 全画面</button>
+      </div>
+    </div>
+    <div id="mon-answer" class="mon-answer hidden">
+      <img id="mon-winner-icon" alt="回答者">
+      <div id="mon-winner-name" class="mon-winner-name"></div>
+    </div>
+    <div id="mon-board"></div>
+  </section>
+
+  <section id="player-ui" class="hidden">
+    <div id="buzzer-area">
       <div class="topbar">
         <strong id="player-display-name"></strong>
         <span id="player-score" class="badge">0 pt</span>
       </div>
       <div id="player-status" class="status">ホストの開始を待っています</div>
       <button id="buzzer-btn" class="buzzer-btn" onclick="pushBuzzer()" disabled>押す！</button>
-      <button onclick="leaveGame()" class="secondary">退出</button>
+      <p class="center small" style="margin-top:22px">
+        <a href="#" class="rejoin-link" onclick="rejoinAsNew(); return false;">別のニックネームで参加し直す</a>
+      </p>
     </div>
   </section>
 
@@ -142,6 +211,16 @@
 
     <div class="join-code" id="host-game-code"></div>
     <p class="small center">このゲームIDを参加者に共有してください</p>
+    <div class="join-share">
+      <div id="join-qr"></div>
+      <button class="secondary" onclick="copyJoinLink()">🔗 参加用リンクをコピー</button>
+      <p class="small" id="join-link-text"></p>
+      <p class="small">QRコードを読み取ると、ゲームIDが入力済みの参加画面が開きます。</p>
+      <div class="grid2">
+        <button class="secondary" onclick="openMonitor()">🖥 モニター画面を開く</button>
+        <button class="secondary" onclick="copyMonitorLink()">モニター用リンクをコピー</button>
+      </div>
+    </div>
 
     <div class="answer">
       <strong>🎵 現在の曲</strong>
@@ -153,6 +232,8 @@
       <div id="winner-display" class="winner-name">-</div>
       <div id="winner-state" class="small">早押し受付停止中</div>
     </div>
+
+    <button class="secondary" id="sound-toggle-btn" onclick="toggleSound()">🔊 効果音：ON</button>
 
     <div class="host-controls">
       <button class="green wide" id="start-buzzer-btn" onclick="startBuzzer()">🔔 早押し開始</button>
@@ -180,6 +261,7 @@
   </section>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 <script>
@@ -261,15 +343,18 @@ function watch(ref, event, cb) {
 }
 
 function showOnly(id) {
-  ["role-select","game-form","host-resume-form","player-ui","host-ui"].forEach(x => {
+  ["role-select","game-form","host-resume-form","monitor-form","player-ui","host-ui","monitor-ui"].forEach(x => {
     document.getElementById(x).classList.add("hidden");
   });
   if(id) document.getElementById(id).classList.remove("hidden");
+  document.body.classList.toggle("monitor", id === "monitor-ui");
 }
 
 function selectRole(role) {
   if(role === "host") {
     createGame();
+  } else if(role === "monitor") {
+    showOnly("monitor-form");
   } else {
     showOnly("game-form");
   }
@@ -288,6 +373,7 @@ function showHostResume() {
 let creating = false;
 async function createGame() {
   if(creating || !dbReady()) return;
+  unlockAudio(); // タップ操作の中で音を有効化しておく
   creating = true;
   const btn = document.getElementById("host-role-btn");
   btn.disabled = true;
@@ -318,6 +404,7 @@ async function createGame() {
     showOnly("host-ui");
     document.getElementById("host-game-code").innerText = gameId;
     document.getElementById("host-game-badge").innerText = "ID " + gameId;
+    showJoinLink();
     initHost();
   } catch(err) {
     console.error(err);
@@ -332,6 +419,7 @@ async function createGame() {
 
 async function resumeHost() {
   if(!dbReady()) return;
+  unlockAudio();
   const code = document.getElementById("host-resume-code").value.trim().toUpperCase();
   if(!code) return alert("ゲームIDを入力してください");
 
@@ -346,6 +434,7 @@ async function resumeHost() {
     showOnly("host-ui");
     document.getElementById("host-game-code").innerText = gameId;
     document.getElementById("host-game-badge").innerText = "ID " + gameId;
+    showJoinLink();
     initHost();
   } catch(err) {
     console.error(err);
@@ -353,24 +442,29 @@ async function resumeHost() {
   }
 }
 
-async function continueWithGame() {
-  if(!dbReady()) return;
-  const code = document.getElementById("game-code-input").value.trim().toUpperCase();
-  if(!code) return alert("ゲームIDを入力してください");
+// 参加用リンク（?game=XXXX 付き）
+function joinUrl() {
+  return location.href.split(/[?#]/)[0] + "?game=" + encodeURIComponent(gameId);
+}
 
+function showJoinLink() {
+  const url = joinUrl();
+  document.getElementById("join-link-text").innerText = url;
+  const box = document.getElementById("join-qr");
+  box.innerHTML = "";
+  if(typeof QRCode !== "undefined") {
+    try { new QRCode(box, {text: url, width: 180, height: 180}); }
+    catch(e) { console.error("QR生成エラー:", e); }
+  }
+}
+
+async function copyJoinLink() {
+  const url = joinUrl();
   try {
-    const snap = await withTimeout(db.ref("games/" + code).once("value"));
-    if(!snap.exists()) return alert("そのゲームIDは見つかりません");
-    if(snap.val().status === "finished") return alert("このゲームは終了しています");
-
-    gameId = code;
-    isHost = false;
-    gameFinished = false;
-    showOnly("player-ui");
-    document.getElementById("player-game-badge").innerText = "ID " + gameId;
-  } catch(err) {
-    console.error(err);
-    alert("ゲームに接続できませんでした。\n" + explainError(err));
+    await navigator.clipboard.writeText(url);
+    alert("参加用リンクをコピーしました");
+  } catch(e) {
+    prompt("このリンクをコピーして参加者に共有してください", url);
   }
 }
 
@@ -397,33 +491,145 @@ function previewImage(event) {
   reader.readAsDataURL(file);
 }
 
-function joinGame() {
-  if(joining) return;
-  myName = document.getElementById("player-name").value.trim();
-  if(!myName) return alert("名前を入力してください");
-  if(!gameId) return alert("ゲームIDがありません");
+// ---- 参加者の在席管理（切断しても参加者・スコアは消さない）----
+const SESSION_KEY = "introDonPlayer";
+let playerOnline = true;
+let removedHandled = false;
 
-  joining = true;
-  myId = makeId();
-  const playerRef = gameRef("players/" + myId);
+const SESSION_MAX_AGE = 12 * 60 * 60 * 1000; // 最後に接続してから12時間で復帰対象外
 
-  playerRef.set({
-    name: myName,
-    score: 0,
-    icon: base64Image,
-    joinedAt: firebase.database.ServerValue.TIMESTAMP
-  }).then(() => {
-    // 通信が切れたら自動的に参加者を削除
-    playerRef.onDisconnect().remove();
+function saveSession() {
+  try { localStorage.setItem(SESSION_KEY, JSON.stringify({gameId, myId, savedAt: Date.now()})); } catch(e) {}
+}
+function clearSession() {
+  try { localStorage.removeItem(SESSION_KEY); } catch(e) {}
+}
 
-    document.getElementById("join-form").classList.add("hidden");
-    document.getElementById("buzzer-area").classList.remove("hidden");
+// 接続状態を監視。切断時は削除せず online=false にするだけ（スコアは残る）。
+// 再接続するたびに online=true に戻す。
+function startPresence() {
+  const onlineRef = gameRef("players/" + myId + "/online");
+  watch(db.ref(".info/connected"), "value", snap => {
+    playerOnline = snap.val() === true;
+    renderPlayer();
+    if(!playerOnline) return;
+    saveSession(); // 接続のたびに有効期限を延ばす
+    onlineRef.onDisconnect().set(false);
+    onlineRef.set(true);
+  });
+}
+
+// ホストに削除された場合
+function handlePlayerRemoved() {
+  if(removedHandled) return;
+  removedHandled = true;
+  try { gameRef("players/" + myId + "/online").onDisconnect().cancel(); } catch(e) {}
+  clearSession();
+  alert("ホストによって削除されました。もう一度参加してください。");
+  location.href = location.href.split(/[?#]/)[0] + (gameId ? "?game=" + encodeURIComponent(gameId) : "");
+}
+
+// 今の参加者を削除して、参加画面からやり直す
+async function rejoinAsNew() {
+  if(!confirm("参加し直しますか？\n今のニックネームとスコアは消えます。")) return;
+
+  removedHandled = true; // 自分で消すので「削除されました」の通知は出さない
+  const returnUrl = location.href.split(/[?#]/)[0] + (gameId ? "?game=" + encodeURIComponent(gameId) : "");
+  clearSession();
+  clearListeners();
+  try {
+    gameRef("players/" + myId + "/online").onDisconnect().cancel();
+    await withTimeout(gameRef("players/" + myId).remove(), 4000);
+  } catch(e) { console.error(e); }
+  location.href = returnUrl;
+}
+
+// ブラウザを閉じた・再読み込みした場合でも、同じ参加者として復帰する
+async function tryRestorePlayer(urlGame) {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch(e) {}
+  if(!saved || !saved.gameId || !saved.myId || !db) return false;
+  if(urlGame && urlGame !== saved.gameId) return false; // 別のゲームのリンクを開いた場合は新規参加
+  if(saved.savedAt && Date.now() - saved.savedAt > SESSION_MAX_AGE) { clearSession(); return false; }
+
+  try {
+    const [st, pl] = await withTimeout(Promise.all([
+      db.ref("games/" + saved.gameId + "/status").once("value"),
+      db.ref("games/" + saved.gameId + "/players/" + saved.myId).once("value")
+    ]));
+    const p = pl.val();
+    if(!st.exists() || st.val() === "finished" || !p || !p.name) {
+      clearSession();
+      return false;
+    }
+
+    gameId = saved.gameId;
+    myId = saved.myId;
+    myName = p.name;
+    base64Image = p.icon || defaultIcon;
+    isHost = false;
+    gameFinished = false;
+
+    showOnly("player-ui");
     document.getElementById("player-display-name").innerText = myName;
     listenPlayer();
-  }).catch(err => {
+    startPresence();
+    return true;
+  } catch(err) {
+    console.error("参加者の復帰に失敗:", err);
+    return false;
+  }
+}
+
+async function joinGame() {
+  if(joining || !dbReady()) return;
+
+  const code = document.getElementById("game-code-input").value.trim().toUpperCase();
+  const name = document.getElementById("player-name").value.trim();
+  if(!code) return alert("ゲームIDを入力してください");
+  if(!name) return alert("ニックネームを入力してください");
+
+  joining = true;
+  const btn = document.getElementById("join-btn");
+  btn.disabled = true;
+  btn.innerText = "参加中…";
+
+  try {
+    // 参加者全員のアイコンを読み込まないよう、statusだけを確認する
+    const snap = await withTimeout(db.ref("games/" + code + "/status").once("value"));
+    if(!snap.exists()) return alert("そのゲームIDは見つかりません");
+    if(snap.val() === "finished") return alert("このゲームは終了しています");
+
+    gameId = code;
+    isHost = false;
+    gameFinished = false;
+    removedHandled = false;
+    myName = name;
+    myId = makeId();
+
+    const playerRef = gameRef("players/" + myId);
+    await withTimeout(playerRef.set({
+      name: myName,
+      score: 0,
+      icon: base64Image,
+      online: true,
+      joinedAt: firebase.database.ServerValue.TIMESTAMP
+    }));
+
+    saveSession();
+
+    showOnly("player-ui");
+    document.getElementById("player-display-name").innerText = myName;
+    listenPlayer();
+    startPresence();
+  } catch(err) {
+    console.error(err);
+    alert("参加できませんでした。\n" + explainError(err));
+  } finally {
     joining = false;
-    alert("参加できませんでした: " + err.message);
-  });
+    btn.disabled = false;
+    btn.innerText = "参加する";
+  }
 }
 
 function pushBuzzer() {
@@ -445,37 +651,72 @@ function pushBuzzer() {
   });
 }
 
-function listenPlayer() {
-  clearListeners();
+let playerBuzzer = {open:false, winner:null};
+let playerResult = null;
 
-  watch(gameRef("buzzer"), "value", snap => {
-    const buzzer = snap.val() || {open:false,winner:null};
-    const btn = document.getElementById("buzzer-btn");
-    const status = document.getElementById("player-status");
+// 参加者の表示は「早押しの状態」と「直前の判定結果」から1か所で決める
+function renderPlayer() {
+  const btn = document.getElementById("buzzer-btn");
+  const status = document.getElementById("player-status");
 
-    if(gameFinished) { btn.disabled = true; return; }
+  if(gameFinished) { btn.disabled = true; return; }
 
-    if(buzzer.winner) {
-      btn.disabled = true;
-      if(buzzer.winner.id === myId) {
-        status.innerText = "🎉 あなたが最速です！";
-        status.style.color = "#ef4444";
-      } else {
-        status.innerText = buzzer.winner.name + " さんが押しました！";
-        status.style.color = "#667085";
-      }
-      return;
-    }
+  const b = playerBuzzer;
+  status.className = "status";
+  status.style.color = "";
 
-    if(buzzer.open) {
-      btn.disabled = false;
-      status.innerText = "🔥 押せ！";
-      status.style.color = "#16a34a";
+  // 通信が切れている間は押せないようにする（古い状態で押してしまうのを防ぐ）
+  if(!playerOnline) {
+    btn.disabled = true;
+    status.innerText = "📡 接続が切れています。復帰を待っています…";
+    status.style.color = "#f59e0b";
+    return;
+  }
+
+  if(b.winner) {
+    btn.disabled = true;
+    if(b.winner.id === myId) {
+      status.innerText = "🎉 あなたが最速です！";
+      status.style.color = "#ef4444";
     } else {
-      btn.disabled = true;
-      status.innerText = "ホストの開始を待っています";
+      status.innerText = b.winner.name + " さんが押しました！";
       status.style.color = "#667085";
     }
+  } else if(b.open) {
+    btn.disabled = false;
+    status.innerText = "🔥 押せ！";
+    status.style.color = "#16a34a";
+  } else if(playerResult) {
+    btn.disabled = true;
+    const name = escapeHtml(playerResult.name || "");
+    if(playerResult.correct) {
+      status.classList.add("correct");
+      status.innerHTML = '<div class="result-main">⭕ ' + name + ' さん正解！</div>' +
+        (playerResult.title ? '<div class="result-song">🎵 ' + escapeHtml(playerResult.title) + '</div>' : "");
+    } else {
+      status.classList.add("wrong");
+      status.innerHTML = '<div class="result-main">❌ ' + name + ' さん不正解！</div>';
+    }
+  } else {
+    btn.disabled = true;
+    status.innerText = "ホストの開始を待っています";
+    status.style.color = "#667085";
+  }
+}
+
+function listenPlayer() {
+  clearListeners();
+  playerBuzzer = {open:false, winner:null};
+  playerResult = null;
+
+  watch(gameRef("buzzer"), "value", snap => {
+    playerBuzzer = snap.val() || {open:false, winner:null};
+    renderPlayer();
+  });
+
+  watch(gameRef("result"), "value", snap => {
+    playerResult = snap.val();
+    renderPlayer();
   });
 
   watch(gameRef("status"), "value", snap => {
@@ -483,20 +724,133 @@ function listenPlayer() {
       gameFinished = true;
       document.getElementById("buzzer-btn").disabled = true;
       const status = document.getElementById("player-status");
-      status.innerText = "🏁 ゲーム終了";
+      status.className = "status finished";
       status.style.color = "";
-      status.classList.add("finished");
+      status.innerText = "🏁 ゲーム終了";
     }
   });
 
-  watch(gameRef("players/" + myId + "/score"), "value", snap => {
-    document.getElementById("player-score").innerText = (snap.val() || 0) + " pt";
+  watch(gameRef("players/" + myId), "value", snap => {
+    const me = snap.val();
+    if(!me || !me.name) { handlePlayerRemoved(); return; }
+    document.getElementById("player-score").innerText = (Number(me.score) || 0) + " pt";
   });
 }
 
+// ---- 効果音（Web Audioで生成。音声ファイル不要）----
+//   buzz=早押しされた音 / correct=正解音 / wrong=不正解音
+let audioCtx = null;
+let soundOn = true;
+let soundKey = "introDonSound"; // ホスト用。モニターは別の設定（ホストとモニターで音のON/OFFを分けられる）
+
+function loadSoundSetting(key) {
+  soundKey = key;
+  try { soundOn = localStorage.getItem(soundKey) !== "off"; } catch(e) { soundOn = true; }
+}
+loadSoundSetting("introDonSound");
+
+// ブラウザの制限で、画面操作（タップ）の中で一度有効化しないと音が出ない
+function unlockAudio() {
+  try {
+    if(!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return;
+      audioCtx = new AC();
+    }
+    if(audioCtx.state === "suspended") audioCtx.resume();
+  } catch(e) { console.error("音の初期化エラー:", e); }
+}
+
+// 1つの音（オシレーター）を予約して鳴らす
+function tone(t0, o) {
+  const start = t0 + (o.delay || 0);
+  const dur = o.dur || 0.3;
+  const vol = o.vol || 0.4;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = o.type || "sine";
+  osc.frequency.setValueAtTime(o.freq, start);
+  if(o.freqEnd) osc.frequency.exponentialRampToValueAtTime(o.freqEnd, start + dur);
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(vol, start + 0.01);
+  if(o.sustain) gain.gain.setValueAtTime(vol, start + dur * 0.75); // ブザーのように音量を保つ
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(start);
+  osc.stop(start + dur + 0.05);
+}
+
+function playSound(kind) {
+  if(!soundOn || !audioCtx) return;
+  try {
+    if(audioCtx.state === "suspended") audioCtx.resume();
+    const t = audioCtx.currentTime;
+
+    if(kind === "buzz") {
+      // 早押しクイズの「ピコーン！」：短く駆け上がってから、高い音が伸びる
+      tone(t, {type:"square",   freq:800,  freqEnd:2400, dur:0.09, vol:0.2});
+      tone(t, {type:"triangle", freq:2093, delay:0.09, dur:0.5,  vol:0.5});
+      tone(t, {type:"sine",     freq:4186, delay:0.09, dur:0.3,  vol:0.1});
+    } else if(kind === "correct") {
+      // 正解「ピンポン、ピンポーン！」
+      [[1319, 0, 0.16], [1047, 0.17, 0.16], [1319, 0.36, 0.16], [1047, 0.53, 0.75]].forEach(([freq, delay, dur]) => {
+        tone(t, {type:"sine",     freq,           delay, dur, vol:0.5});
+        tone(t, {type:"triangle", freq:freq * 2,  delay, dur, vol:0.1});
+      });
+    } else if(kind === "wrong") {
+      // 不正解「ブブー」
+      tone(t, {type:"sawtooth", freq:150, delay:0,    dur:0.22, vol:0.25, sustain:true});
+      tone(t, {type:"sawtooth", freq:150, delay:0.28, dur:0.7,  vol:0.25, sustain:true});
+    }
+  } catch(e) { console.error("音の再生エラー:", e); }
+}
+
+// 早押し・正解・不正解のタイミングで鳴らす（ホスト画面・モニター画面の両方で使用）
+function attachSoundWatchers() {
+  let buzzSeen = false, lastWinner = null;   // 最初の読み込みでは鳴らさない／同じ回答者で二重に鳴らさない
+  let resultSeen = false, lastResult = null;
+
+  watch(gameRef("buzzer"), "value", snap => {
+    const b = snap.val() || {};
+    const key = b.winner ? b.winner.id : null;
+    if(key && key !== lastWinner && buzzSeen) playSound("buzz");
+    lastWinner = key;
+    buzzSeen = true;
+  });
+
+  watch(gameRef("result"), "value", snap => {
+    const r = snap.val();
+    const key = r ? (r.rid || String(r.at)) : null;
+    if(key && key !== lastResult && resultSeen) playSound(r.correct ? "correct" : "wrong");
+    lastResult = key;
+    resultSeen = true;
+  });
+}
+
+function updateSoundButton() {
+  const host = document.getElementById("sound-toggle-btn");
+  if(host) host.innerText = soundOn ? "🔊 効果音：ON" : "🔇 効果音：OFF";
+  const mon = document.getElementById("monitor-sound-btn");
+  if(mon) mon.innerText = soundOn ? "🔊 音ON" : "🔇 音OFF";
+}
+
+function toggleSound() {
+  soundOn = !soundOn;
+  try { localStorage.setItem(soundKey, soundOn ? "on" : "off"); } catch(e) {}
+  updateSoundButton();
+  unlockAudio();
+  if(soundOn) playSound("buzz"); // ONにした時は試し鳴らし
+}
+
 function startBuzzer() {
-  gameRef("status").set("playing");
-  gameRef("buzzer").set({open:true,winner:null});
+  unlockAudio();
+  // 状態・受付・前回の判定結果を1回の書き込みでまとめて更新
+  gameRef().update({
+    status: "playing",
+    buzzer: {open:true, winner:null},
+    result: null
+  });
 }
 
 function clearCurrentAnswerer() {
@@ -515,9 +869,6 @@ async function judge(isCorrect) {
 
     if(!winner) return alert("まだ回答者が決まっていません");
 
-    // 先に受付を閉じる
-    await gameRef("buzzer/open").set(false);
-
     // 退出済みの参加者に加点して「名無し」が復活しないよう、存在確認してから加点
     if(isCorrect && winner.id) {
       const exists = (await gameRef("players/" + winner.id).once("value")).exists();
@@ -526,7 +877,20 @@ async function judge(isCorrect) {
       }
     }
 
-    await gameRef("buzzer/winner").set(null);
+    // 受付を閉じる・回答者をクリア・判定結果を全員に配信、を1回の書き込みで行う
+    // 曲名は正解のときだけ参加者に見せる
+    const title = document.getElementById("song-title").value.trim();
+    await gameRef().update({
+      "buzzer/open": false,
+      "buzzer/winner": null,
+      "result": {
+        rid: makeId(),
+        correct: !!isCorrect,
+        name: winner.name || "",
+        title: isCorrect ? title : "",
+        at: firebase.database.ServerValue.TIMESTAMP
+      }
+    });
   } catch(err) {
     alert("判定に失敗しました: " + err.message);
   } finally {
@@ -552,6 +916,153 @@ async function saveCurrentQuestion() {
   alert("第" + number + "問として保存しました");
 }
 
+function removePlayer(id) {
+  if(confirm("この参加者を削除しますか？（スコアも消えます）")) {
+    gameRef("players/" + id).remove();
+  }
+}
+
+// ---- モニター画面 ----
+function monitorUrl() {
+  return location.href.split(/[?#]/)[0] + "?monitor=" + encodeURIComponent(gameId);
+}
+
+function openMonitor() {
+  window.open(monitorUrl(), "_blank");
+}
+
+async function copyMonitorLink() {
+  const url = monitorUrl();
+  try {
+    await navigator.clipboard.writeText(url);
+    alert("モニター用リンクをコピーしました");
+  } catch(e) {
+    prompt("このリンクをモニター側で開いてください", url);
+  }
+}
+
+function toggleFullscreen() {
+  try {
+    if(document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen();
+  } catch(e) { console.error(e); }
+}
+
+async function startMonitor() {
+  if(!dbReady()) return;
+  const code = document.getElementById("monitor-code-input").value.trim().toUpperCase();
+  if(!code) return alert("ゲームIDを入力してください");
+  unlockAudio(); // 「表示する」のタップ中に音を有効化
+
+  try {
+    const snap = await withTimeout(db.ref("games/" + code + "/status").once("value"));
+    if(!snap.exists()) return alert("そのゲームIDは見つかりません");
+
+    clearListeners();
+    gameId = code;
+    isHost = false;
+    gameFinished = false;
+    showOnly("monitor-ui");
+    initMonitor();
+  } catch(err) {
+    console.error(err);
+    alert("接続できませんでした。\n" + explainError(err));
+  }
+}
+
+function initMonitor() {
+  loadSoundSetting("introDonMonitorSound");
+  updateSoundButton();
+  attachSoundWatchers();
+
+  let buzzer = {open:false, winner:null};
+  let players = {};
+  let finished = false;
+
+  const render = () => {
+    const answerEl = document.getElementById("mon-answer");
+    const boardEl = document.getElementById("mon-board");
+    const stateEl = document.getElementById("mon-state");
+    const titleEl = document.getElementById("mon-title");
+    const winner = buzzer.winner;
+
+    // 右上のバッジ
+    if(finished) {
+      stateEl.innerText = "🏁 ゲーム終了";
+      stateEl.className = "mon-badge";
+    } else if(buzzer.open && !winner) {
+      stateEl.innerText = "🔔 早押し受付中";
+      stateEl.className = "mon-badge open";
+    } else {
+      stateEl.innerText = "";
+      stateEl.className = "mon-badge hidden";
+    }
+
+    // 回答中：早押しした人のアイコンと名前
+    if(winner && !finished) {
+      titleEl.innerText = "🔔 回答者";
+      const img = document.getElementById("mon-winner-icon");
+      const src = winner.icon || defaultIcon;
+      if(img.getAttribute("src") !== src) img.src = src;
+      document.getElementById("mon-winner-name").innerText = winner.name || "";
+      answerEl.classList.remove("hidden");
+      boardEl.classList.add("hidden");
+      return;
+    }
+
+    // それ以外：ポイント上位者のスコアボード
+    answerEl.classList.add("hidden");
+    boardEl.classList.remove("hidden");
+
+    const all = Object.values(players)
+      .filter(p => p && p.name)
+      .map(p => ({name: p.name, icon: p.icon || defaultIcon, score: Number(p.score) || 0}));
+    const scored = all.filter(p => p.score > 0)
+      .sort((a,b) => b.score - a.score || a.name.localeCompare(b.name));
+
+    if(scored.length === 0) {
+      // まだ得点者がいない間は参加者一覧
+      titleEl.innerText = finished ? "🏁 最終結果" : "👥 参加者";
+      boardEl.innerHTML = all.length
+        ? '<div class="mon-count">' + all.length + '人が参加中</div><div class="mon-lobby">' +
+          all.map(p => '<div class="mon-chip"><img src="' + escapeHtml(p.icon) + '" alt=""><span>' + escapeHtml(p.name) + '</span></div>').join("") +
+          '</div>'
+        : '<div class="mon-empty">参加者を待っています…</div>';
+      return;
+    }
+
+    titleEl.innerText = finished ? "🏁 最終結果" : "🏆 スコアボード";
+
+    // 上位10位まで（10位と同点の人も含める）
+    const cutoff = scored[Math.min(9, scored.length - 1)].score;
+    const top = scored.filter(p => p.score >= cutoff).slice(0, 15);
+
+    let rank = 0, prev = null;
+    boardEl.innerHTML = top.map((p, i) => {
+      if(p.score !== prev) { rank = i + 1; prev = p.score; } // 同点は同順位
+      const mark = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
+      return '<div class="mon-row' + (rank === 1 ? " first" : "") + '">' +
+        '<span class="mon-rank">' + mark + '</span>' +
+        '<img src="' + escapeHtml(p.icon) + '" alt="">' +
+        '<span class="mon-name">' + escapeHtml(p.name) + '</span>' +
+        '<span class="mon-pt">' + p.score + '<small>pt</small></span></div>';
+    }).join("");
+  };
+
+  watch(gameRef("buzzer"), "value", snap => {
+    buzzer = snap.val() || {open:false, winner:null};
+    render();
+  });
+  watch(gameRef("players"), "value", snap => {
+    players = snap.val() || {};
+    render();
+  });
+  watch(gameRef("status"), "value", snap => {
+    finished = snap.val() === "finished";
+    render();
+  });
+}
+
 function deleteQuestion(id) {
   if(confirm("この問題履歴を削除しますか？")) {
     gameRef("questions/" + id).remove();
@@ -566,19 +1077,11 @@ function finishGame() {
   alert("ゲームを終了しました");
 }
 
-function leaveGame() {
-  clearListeners();
-  const done = () => location.reload();
-  if(myId && gameId) {
-    // 削除が完了する前にリロードして消えないよう、完了を待つ
-    gameRef("players/" + myId).remove().then(done, done);
-  } else {
-    done();
-  }
-}
-
 function initHost() {
   clearListeners();
+  loadSoundSetting("introDonSound");
+  updateSoundButton();
+  attachSoundWatchers();
 
   // .info/connected はルート直下の特殊パス（games/XXXX/ の下に付けるとエラーになる）
   watch(db.ref(".info/connected"), "value", snap => {
@@ -595,6 +1098,7 @@ function initHost() {
   watch(gameRef("buzzer"), "value", snap => {
     const buzzer = snap.val() || {open:false,winner:null};
     const winner = buzzer.winner;
+
     const display = document.getElementById("winner-display");
     const icon = document.getElementById("winner-icon");
     const state = document.getElementById("winner-state");
@@ -640,22 +1144,32 @@ function initHost() {
   watch(gameRef("players"), "value", snap => {
     const players = snap.val() || {};
     const arr = Object.entries(players)
+      .filter(([id,p]) => p && p.name) // 名前のないゴミデータは表示しない
       .map(([id,p]) => ({id,...p}))
       .sort((a,b) => (Number(b.score)||0) - (Number(a.score)||0));
 
-    document.getElementById("host-player-count").innerText = "(" + arr.length + "人)";
+    const offlineCount = arr.filter(p => p.online === false).length;
+    document.getElementById("host-player-count").innerText =
+      "(" + arr.length + "人" + (offlineCount ? "・切断中" + offlineCount + "人" : "") + ")";
+
     const list = document.getElementById("score-list");
     list.innerHTML = "";
 
     arr.forEach((p,i) => {
+      const offline = p.online === false;
       const li = document.createElement("li");
+      if(offline) li.className = "offline";
       li.innerHTML = `
         <div class="player-info">
           <span class="rank">${i+1}</span>
           <img class="score-icon" src="${escapeHtml(p.icon || defaultIcon)}" alt="">
-          <span class="player-name">${escapeHtml(p.name || "名無し")}</span>
+          <span class="player-name">${escapeHtml(p.name)}</span>
+          ${offline ? '<span class="offline-tag">切断中</span>' : ""}
         </div>
-        <strong>${Number(p.score)||0} pt</strong>`;
+        <div class="score-right">
+          <strong>${Number(p.score)||0} pt</strong>
+          ${offline ? `<button class="red" onclick="removePlayer('${escapeHtml(p.id)}')">削除</button>` : ""}
+        </div>`;
       list.appendChild(li);
     });
   });
@@ -688,7 +1202,22 @@ function escapeHtml(value) {
 }
 
 // 初期表示
+const gameFromUrl = (new URLSearchParams(location.search).get("game") || "").trim().toUpperCase().slice(0, 8);
+if(gameFromUrl) {
+  document.getElementById("game-code-input").value = gameFromUrl;
+  document.getElementById("game-code-field").classList.add("hidden"); // リンク経由ならID入力は不要
+  showOnly("game-form");
+  document.getElementById("player-name").focus();
+}
 document.getElementById("icon-preview").src = defaultIcon;
+// モニター用リンク（?monitor=XXXX）
+const monitorFromUrl = (new URLSearchParams(location.search).get("monitor") || "").trim().toUpperCase().slice(0, 8);
+if(monitorFromUrl) {
+  document.getElementById("monitor-code-input").value = monitorFromUrl;
+  showOnly("monitor-form");
+} else {
+  tryRestorePlayer(gameFromUrl); // 以前参加していたゲームがあれば自動で復帰
+}
 if(localStorage.getItem("introDonHostGame")) {
   document.getElementById("resume-host-btn").classList.remove("hidden");
 }
