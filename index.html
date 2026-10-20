@@ -127,6 +127,17 @@
     .pr-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .mon-rank-row.first{background:#3a2c08;box-shadow:inset 0 0 0 2px #f59e0b}
     .mon-blur{filter:blur(14px);user-select:none;pointer-events:none}
+    .mon-result{min-height:72vh;display:flex;flex-direction:column;align-items:center;text-align:center;border-radius:28px;background:radial-gradient(circle at 50% 0%,#78350f 0%,#0b1220 70%);padding:3vh 2vw}
+    .mon-result-head{font-size:min(6vh,4.5vw);font-weight:900;color:#fde68a;margin-bottom:2.5vh}
+    .mon-result-list{width:min(80vw,900px);display:flex;flex-direction:column;gap:.6vh}
+    .mon-res-row{display:flex;align-items:center;gap:1.2vw;height:min(7vh,calc(70vh / var(--n)));background:#111c33;border-radius:16px;padding:0 1.6vw;font-size:min(3.6vh,2.8vw);font-weight:800;opacity:0;transform:translateY(24px);transition:opacity .45s ease,transform .45s ease}
+    .mon-res-row.shown{opacity:1;transform:none}
+    .mon-res-row img{width:2em;height:2em;border-radius:50%;object-fit:cover;flex-shrink:0}
+    .mon-res-row .mon-name{flex:1;min-width:0;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .mon-res-row .mon-pt{font-variant-numeric:tabular-nums}
+    .mon-res-row.first{background:#3a2c08}
+    .mon-res-row.champ{animation:mon-champ 1.2s ease-in-out infinite alternate}
+    @keyframes mon-champ{from{box-shadow:inset 0 0 0 2px #f59e0b,0 0 0 rgba(251,191,36,0)}to{box-shadow:inset 0 0 0 2px #fde68a,0 0 3vh rgba(251,191,36,.8)}}
     .rejoin-link{color:#94a3b8;text-decoration:underline;padding:8px}
     .score-list li.offline{opacity:.55}
     .offline-tag{font-size:11px;color:#667085;margin-left:6px;white-space:nowrap}
@@ -234,6 +245,10 @@
       <div class="mon-roulette-label" id="mon-roulette-label"></div>
       <div class="mon-roulette-num" id="mon-roulette-num">1</div>
       <div class="mon-roulette-sub" id="mon-roulette-sub"></div>
+    </div>
+    <div id="mon-result" class="mon-result hidden">
+      <div class="mon-result-head" id="mon-result-head">🏁 結果発表</div>
+      <div class="mon-result-list" id="mon-result-list"></div>
     </div>
     <div id="mon-board"></div>
   </section>
@@ -1064,6 +1079,36 @@ function playSynth(kind) {
   } catch(e) { console.error("音の再生エラー:", e); }
 }
 
+// 得点が決まった音：点数の数だけ鈴が鳴る（1点＝1回、2点＝2回、3点＝3回）
+function playPointSound(points) {
+  if(!soundOn || !audioCtx) return;
+  try {
+    if(audioCtx.state === "suspended") audioCtx.resume();
+    const t = audioCtx.currentTime;
+    const n = Math.max(1, Math.min(3, points));
+    for(let i = 0; i < n; i++) bell(t, [1046, 1318, 1568][i], 0.35, 0.8, i * 0.22);
+  } catch(e) { console.error("音の再生エラー:", e); }
+}
+
+// ルーレットの回転音（カチッ。数字ごとに音程を変える）
+function playRouletteTick(value) {
+  if(!soundOn || !audioCtx) return;
+  try {
+    if(audioCtx.state === "suspended") audioCtx.resume();
+    const freq = [1400, 1800, 2200][value - 1] || 1800;
+    tone(audioCtx.currentTime, {type: "square", freq, dur: 0.04, vol: 0.12});
+  } catch(e) { console.error("音の再生エラー:", e); }
+}
+
+// 結果発表で1行ずつ出る時の音
+function playRevealTick() {
+  if(!soundOn || !audioCtx) return;
+  try {
+    if(audioCtx.state === "suspended") audioCtx.resume();
+    bell(audioCtx.currentTime, 1046, 0.2, 0.4);
+  } catch(e) { console.error("音の再生エラー:", e); }
+}
+
 // 早押し・正解・不正解のタイミングで鳴らす（ホスト画面・モニター画面の両方で使用）
 function attachSoundWatchers() {
   let buzzSeen = false, lastWinner = null;   // 最初の読み込みでは鳴らさない／同じ回答者で二重に鳴らさない
@@ -1080,9 +1125,22 @@ function attachSoundWatchers() {
   watch(gameRef("result"), "value", snap => {
     const r = snap.val();
     const key = r ? (r.rid || String(r.at)) : null;
-    if(key && key !== lastResult && resultSeen) playSound(r.correct ? "correct" : "wrong");
+    if(key && key !== lastResult && resultSeen) {
+      if(r.correct) playPointSound(Number(r.points) || 1); // 得点が決まった音
+      else playSound("wrong");
+    }
     lastResult = key;
     resultSeen = true;
+  });
+
+  // 正解の瞬間（ルーレットが始まった時）にピンポーン
+  let rouletteSeen = false, lastRoulette = null;
+  watch(gameRef("roulette"), "value", snap => {
+    const r = snap.val();
+    const key = r && r.rid ? r.rid : null;
+    if(key && key !== lastRoulette && rouletteSeen) playSound("correct");
+    lastRoulette = key;
+    rouletteSeen = true;
   });
 }
 
@@ -1159,6 +1217,7 @@ function hideHostRoulette() {
 }
 
 async function judge(isCorrect) {
+  unlockAudio();
   if(rouletteRid) return alert("ルーレットを止めてから次の判定をしてください");
   if(judging) return; // 連打で二重に処理されるのを防ぐ
   judging = true;
@@ -1225,6 +1284,7 @@ function startRouletteSpin() {
   rouletteSpin = setInterval(() => {
     rouletteValue = rouletteValue % 3 + 1;
     el.innerText = rouletteValue;
+    playRouletteTick(rouletteValue);
   }, 110);
 }
 
@@ -1330,6 +1390,19 @@ async function startMonitor() {
   }
 }
 
+// 1点以上の人を順位付きで並べる（同点は同順位）
+function rankedEntries(players) {
+  const sorted = Object.values(players || {})
+    .filter(p => p && p.name && (Number(p.score) || 0) >= 1)
+    .map(p => ({name: p.name, icon: p.icon || defaultIcon, score: Number(p.score) || 0}))
+    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+  let rank = 0, prev = null;
+  return sorted.map((p, i) => {
+    if(p.score !== prev) { rank = i + 1; prev = p.score; }
+    return {...p, rank};
+  });
+}
+
 function initMonitor() {
   loadSoundSetting("introDonMonitorSound");
   updateSoundButton();
@@ -1346,6 +1419,8 @@ function initMonitor() {
   let spin = null;
   let spinValue = 1;
   let blurRank = false;   // ホストが順位をモザイクにしているか
+  let revealStarted = false; // 結果発表を始めたか
+  let revealTimer = null;
 
   // 音楽画面のイコライザー（バーごとに動きをずらす）
   document.getElementById("mon-eq").innerHTML = Array.from({length: 32}, (_, i) =>
@@ -1357,14 +1432,51 @@ function initMonitor() {
     spin = setInterval(() => {
       spinValue = spinValue % 3 + 1;
       document.getElementById("mon-roulette-num").innerText = spinValue;
+      playRouletteTick(spinValue);
     }, 110);
   };
   const stopSpin = () => { clearInterval(spin); spin = null; };
 
   const monShow = key => {
-    ["music", "roulette", "answer", "board"].forEach(k => {
+    ["music", "roulette", "answer", "board", "result"].forEach(k => {
       document.getElementById("mon-" + k).classList.toggle("hidden", k !== key);
     });
+  };
+
+  // 結果発表：一番下（最下位）から1行ずつ表示し、最後に1位を祝う
+  const startReveal = (entries) => {
+    clearInterval(revealTimer);
+    const listEl = document.getElementById("mon-result-list");
+    listEl.style.setProperty("--n", entries.length);
+    listEl.innerHTML = entries.map(p =>
+      '<div class="mon-res-row' + (p.rank === 1 ? " first" : "") + '">' +
+      '<span class="mon-rank">' + (p.rank === 1 ? "🥇" : p.rank === 2 ? "🥈" : p.rank === 3 ? "🥉" : p.rank) + '</span>' +
+      '<img src="' + escapeHtml(p.icon) + '" alt="">' +
+      '<span class="mon-name">' + escapeHtml(p.name) + '</span>' +
+      '<span class="mon-pt">' + p.score + '<small>pt</small></span></div>').join("");
+
+    const rows = Array.from(listEl.children);
+    const headEl = document.getElementById("mon-result-head");
+    headEl.innerText = "🏁 結果発表";
+    let idx = rows.length - 1;
+    const step = () => {
+      const row = rows[idx];
+      row.classList.add("shown");
+      if(idx === 0) {
+        // 1位：優勝の演出
+        clearInterval(revealTimer);
+        row.classList.add("champ");
+        headEl.innerText = "🎉 優勝：" + entries[0].name + " さん";
+        playSound("correct");
+        return;
+      }
+      playRevealTick();
+      idx--;
+    };
+    setTimeout(() => {
+      step();
+      revealTimer = setInterval(step, 1100);
+    }, 600);
   };
 
   const render = () => {
@@ -1399,6 +1511,17 @@ function initMonitor() {
       return;
     }
     stopSpin();
+
+    // ゲーム終了：1点以上の人がいれば結果発表
+    if(finished) {
+      const entries = rankedEntries(players);
+      if(entries.length) {
+        document.getElementById("mon-title").innerText = "🏁 最終結果";
+        if(!revealStarted) { revealStarted = true; startReveal(entries); }
+        monShow("result");
+        return;
+      }
+    }
 
     if(finished) {
       stateEl.innerText = "🏁 ゲーム終了";
@@ -1480,6 +1603,7 @@ function initMonitor() {
   });
   watch(gameRef("status"), "value", snap => {
     finished = snap.val() === "finished";
+    if(!finished) revealStarted = false;
     render();
   });
   watch(gameRef("roulette"), "value", snap => {
