@@ -138,6 +138,11 @@
     .mon-res-row.first{background:#3a2c08}
     .mon-res-row.champ{animation:mon-champ 1.2s ease-in-out infinite alternate}
     @keyframes mon-champ{from{box-shadow:inset 0 0 0 2px #f59e0b,0 0 0 rgba(251,191,36,0)}to{box-shadow:inset 0 0 0 2px #fde68a,0 0 3vh rgba(251,191,36,.8)}}
+    .mon-join{display:flex;flex-direction:column;align-items:center;gap:1.5vh;text-align:center;margin:1vh 0 3vh}
+    .mon-join-qr-box{background:#fff;padding:2vh;border-radius:24px;box-shadow:0 0 6vh rgba(56,189,248,.35)}
+    .mon-join-qr-box img,.mon-join-qr-box canvas{display:block;width:min(40vh,70vw)!important;height:min(40vh,70vw)!important}
+    .mon-join-title{font-size:min(5vh,4vw);font-weight:900;color:#fff}
+    .mon-join-sub{font-size:min(3vh,2.2vw);color:#94a3b8;font-weight:700}
     .rejoin-link{color:#94a3b8;text-decoration:underline;padding:8px}
     .score-list li.offline{opacity:.55}
     .offline-tag{font-size:11px;color:#667085;margin-left:6px;white-space:nowrap}
@@ -249,6 +254,11 @@
     <div id="mon-result" class="mon-result hidden">
       <div class="mon-result-head" id="mon-result-head">🏁 結果発表</div>
       <div class="mon-result-list" id="mon-result-list"></div>
+    </div>
+    <div id="mon-join" class="mon-join hidden">
+      <div class="mon-join-qr-box"><div id="mon-join-qr"></div></div>
+      <div class="mon-join-title">参加はこちらから</div>
+      <div class="mon-join-sub">QRを読み取って参加 ／ ゲームID <strong id="mon-join-id"></strong></div>
     </div>
     <div id="mon-board"></div>
   </section>
@@ -1410,6 +1420,23 @@ async function startMonitor() {
   }
 }
 
+// モニターの「参加者を待っています」画面に出す参加用QR
+let joinQrFor = null;
+function ensureJoinQr() {
+  if(joinQrFor === gameId) return;
+  joinQrFor = gameId;
+  const box = document.getElementById("mon-join-qr");
+  box.innerHTML = "";
+  const url = location.href.split(/[?#]/)[0] + "?game=" + encodeURIComponent(gameId);
+  if(location.protocol === "file:") {
+    box.innerHTML = '<p class="notice" style="margin:0;max-width:260px">QRは公開URLから開いたときだけ表示できます</p>';
+  } else if(typeof QRCode !== "undefined") {
+    try { new QRCode(box, {text: url, width: 300, height: 300}); }
+    catch(e) { console.error("QR生成エラー:", e); }
+  }
+  document.getElementById("mon-join-id").innerText = gameId;
+}
+
 // 1点以上の人を順位付きで並べる（同点は同順位）
 function rankedEntries(players) {
   const sorted = Object.values(players || {})
@@ -1457,10 +1484,12 @@ function initMonitor() {
   };
   const stopSpin = () => { clearInterval(spin); spin = null; };
 
+  let joinNow = false; // 参加者待ち（得点者がまだいない）か
   const monShow = key => {
     ["music", "roulette", "answer", "board", "result"].forEach(k => {
       document.getElementById("mon-" + k).classList.toggle("hidden", k !== key);
     });
+    document.getElementById("mon-join").classList.toggle("hidden", !(key === "board" && joinNow));
   };
 
   // 結果発表：一番下（最下位）から1行ずつ表示し、最後に1位を祝う
@@ -1583,6 +1612,11 @@ function initMonitor() {
       .map(p => ({name: p.name, icon: p.icon || defaultIcon, score: Number(p.score) || 0}));
     const scored = all.filter(p => p.score > 0)
       .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+
+    // 得点者がまだいない（参加者待ち）間は参加用QRを表示
+    joinNow = scored.length === 0;
+    if(joinNow) ensureJoinQr();
+    document.getElementById("mon-join").classList.toggle("hidden", !joinNow);
 
     if(scored.length === 0) {
       // まだ得点者がいない間は参加者一覧
